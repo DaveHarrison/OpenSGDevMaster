@@ -127,7 +127,7 @@ static void errorOutput (png_structp png_ptr, const char *message)
 {
     FFATAL   (("PNG: %s\n", message ));
     
-    longjmp(png_ptr->jmpbuf, 1);
+    longjmp(png_jmpbuf(png_ptr), 1); 
 }
 
 static void warningOutput (png_structp OSG_CHECK_ARG(png_ptr), 
@@ -177,7 +177,7 @@ bool PNGImageFileType::read(      Image        *OSG_PNG_ARG(pImage  ),
         return false;
     }
 
-    if(setjmp(png_ptr->jmpbuf))
+    if(setjmp(png_jmpbuf(png_ptr))) 
     {
         png_destroy_read_struct(&png_ptr, &info_ptr, 0);
         return false;
@@ -206,7 +206,11 @@ bool PNGImageFileType::read(      Image        *OSG_PNG_ARG(pImage  ),
     // Convert < 8 bit to 8 bit
     if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
     {
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR>2
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+#else
         png_set_gray_1_2_4_to_8(png_ptr);
+#endif
         bit_depth = 8;
     }
 
@@ -683,7 +687,11 @@ UInt64 PNGImageFileType::restoreData(      Image  *OSG_PNG_ARG  (pImage ),
     // Convert < 8 bit to 8 bit
     if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
     {
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR>2
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+#else
         png_set_gray_1_2_4_to_8(png_ptr);
+#endif
         bit_depth = 8;
     }
 
