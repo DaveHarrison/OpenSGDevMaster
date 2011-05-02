@@ -116,7 +116,7 @@ void VRMLCoordinateInterpolatorBase::classDescInserter(TypeObject &oType)
         "",
         KeyValueFieldId, KeyValueFieldMask,
         false,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&VRMLCoordinateInterpolator::editHandleKeyValue),
         static_cast<FieldGetMethodSig >(&VRMLCoordinateInterpolator::getHandleKeyValue));
 
@@ -128,7 +128,7 @@ void VRMLCoordinateInterpolatorBase::classDescInserter(TypeObject &oType)
         "This is VRML's value field.\n",
         OutValueFieldId, OutValueFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&VRMLCoordinateInterpolator::editHandleOutValue),
         static_cast<FieldGetMethodSig >(&VRMLCoordinateInterpolator::getHandleOutValue));
 
@@ -150,40 +150,41 @@ VRMLCoordinateInterpolatorBase::TypeObject VRMLCoordinateInterpolatorBase::_type
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "   name=\"VRMLCoordinateInterpolator\"\n"
-    "   parent=\"VRMLInterpolator\"\n"
-    "   library=\"Dynamics\"\n"
-    "   pointerfieldtypes=\"none\"\n"
-    "   structure=\"concrete\"\n"
-    "   systemcomponent=\"true\"\n"
-    "   parentsystemcomponent=\"true\"\n"
-    "   decoratable=\"false\"\n"
-    "   useLocalIncludes=\"false\"\n"
-    "   isNodeCore=\"true\"\n"
-    "   isBundle=\"false\"\n"
-    "   parentFields=\"none\"\n"
-    "   >\n"
-    "  <Field\n"
-    "     name=\"keyValue\"\n"
-    "     type=\"Pnt3f\"\n"
-    "     cardinality=\"multi\"\n"
-    "     visibility=\"external\"\n"
-    "     access=\"public\"\n"
-    "     defaultValue=\"\"\n"
-    "     fieldFlags=\"FThreadLocal\"\n"
-    "     >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "     name=\"outValue\"\n"
-    "     type=\"Pnt3f\"\n"
-    "     cardinality=\"multi\"\n"
-    "     visibility=\"internal\"\n"
-    "     access=\"public\"\n"
-    "     defaultValue=\"\"\n"
-    "     fieldFlags=\"FThreadLocal\"\n"
-    "     >\n"
-    "    This is VRML's value field.\n"
-    "  </Field>\n"
+    "    name=\"VRMLCoordinateInterpolator\"\n"
+    "    parent=\"VRMLInterpolator\"\n"
+    "    library=\"Dynamics\"\n"
+    "    pointerfieldtypes=\"none\"\n"
+    "    structure=\"concrete\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    decoratable=\"false\"\n"
+    "    useLocalIncludes=\"false\"\n"
+    "    isNodeCore=\"true\"\n"
+    "    isBundle=\"false\"\n"
+    "    parentFields=\"none\"\n"
+    "    docGroupBase=\"GrpDynamicsVRMLAnimation\"\n"
+    "    >\n"
+    "    <Field\n"
+    "        name=\"keyValue\"\n"
+    "        type=\"Pnt3f\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"\"\n"
+    "        fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"outValue\"\n"
+    "        type=\"Pnt3f\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"\"\n"
+    "        fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "        >\n"
+    "        This is VRML's value field.\n"
+    "    </Field>\n"
     "</FieldContainer>\n",
     ""
     );
@@ -278,10 +279,12 @@ void VRMLCoordinateInterpolatorBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (KeyValueFieldMask & whichField))
     {
+        editMField(KeyValueFieldMask, _mfKeyValue);
         _mfKeyValue.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (OutValueFieldMask & whichField))
     {
+        editMField(OutValueFieldMask, _mfOutValue);
         _mfOutValue.copyFromBin(pMem);
     }
 }

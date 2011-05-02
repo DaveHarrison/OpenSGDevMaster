@@ -42,13 +42,14 @@
 
 #include "OSGColladaEffect.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaGlobal.h"
 #include "OSGColladaImage.h"
-#include "OSGColladaSampler2D.h"
 #include "OSGColladaInstanceEffect.h"
+#include "OSGColladaMaterial.h"
+#include "OSGColladaSampler2D.h"
 
 #include "OSGGeometry.h"
 #include "OSGChunkMaterial.h"
@@ -72,6 +73,33 @@
 
 OSG_BEGIN_NAMESPACE
 
+ColladaInstInfoTransitPtr
+ColladaEffect::ColladaEffectInstInfo::create(
+    ColladaMaterial *colInstParent, ColladaInstanceEffect *colInst)
+{
+    return ColladaInstInfoTransitPtr(
+        new ColladaEffectInstInfo(colInstParent, colInst));
+}
+
+void
+ColladaEffect::ColladaEffectInstInfo::process(void)
+{
+    SFATAL << "ColladaEffectInstInfo::process called!" << std::endl;
+}
+
+ColladaEffect::ColladaEffectInstInfo::ColladaEffectInstInfo(
+    ColladaMaterial *colInstParent, ColladaInstanceEffect *colInst)
+
+    : Inherited(colInstParent, colInst)
+{
+}
+
+ColladaEffect::ColladaEffectInstInfo::~ColladaEffectInstInfo(void)
+{
+}
+
+// ===========================================================================
+
 ColladaElementRegistrationHelper ColladaEffect::_regHelper(
     &ColladaEffect::create, "effect");
 
@@ -83,7 +111,7 @@ ColladaEffect::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaEffect::read(void)
+ColladaEffect::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaEffect::read\n"));
 
@@ -119,7 +147,7 @@ ColladaEffect::read(void)
                 ColladaElementFactory::the()->create(
                     paramSurface, getGlobal()));
 
-            param.colSurface->read();
+            param.colSurface->read(this);
 
             _surfaceParams[newParams[i]->getSid()] = param;
             continue;
@@ -138,7 +166,7 @@ ColladaEffect::read(void)
                     paramSampler2D, getGlobal()));
 
             param.colSampler2D->setEffect(this);
-            param.colSampler2D->read     (    );
+            param.colSampler2D->read     (this);
 
             _sampler2DParams[newParams[i]->getSid()] = param;
             continue;
@@ -166,16 +194,16 @@ ColladaEffect::read(void)
 }
 
 Material *
-ColladaEffect::createInstance(ColladaInstanceElement *colInstElem)
+ColladaEffect::createInstance(ColladaInstInfo *colInstInfo)
 {
     OSG_COLLADA_LOG(("ColladaEffect::createInstance\n"));
 
     MaterialUnrecPtr            retVal        = NULL;
     domEffectRef                effect        = getDOMElementAs<domEffect>();
     ColladaInstanceEffectRefPtr colInstEffect =
-        dynamic_cast<ColladaInstanceEffect *>(colInstElem);
+        dynamic_cast<ColladaInstanceEffect *>(colInstInfo->getColInst());
     domInstance_effectRef       instEffect    =
-        colInstElem->getDOMElementAs<domInstance_effect>();
+        colInstInfo->getColInst()->getDOMElementAs<domInstance_effect>();
 
     const domFx_profile_abstract_Array &profiles =
         effect->getFx_profile_abstract_array();
@@ -207,7 +235,7 @@ ColladaEffect::createInstance(ColladaInstanceElement *colInstElem)
     return retVal;
 }
 
-/*! Return parameter of the effect (\c <newparam> tags) with the given \a name.
+/*! Return parameter of the effect (\c &lt;newparam&gt; tags) with the given \a name.
  */
 daeElement *
 ColladaEffect::findDOMParam(const std::string &name) const
@@ -229,8 +257,8 @@ ColladaEffect::findDOMParam(const std::string &name) const
     return NULL;
 }
 
-/*! Return the loader element for the parameter of the effect (\c <newparam>
-    tags) with the given \a name.
+/*! Return the loader element for the parameter of the effect (\c
+    &lt;newparam&gt; tags) with the given \a name.
  */
 ColladaElement *
 ColladaEffect::findParam(const std::string &name) const
@@ -261,7 +289,7 @@ ColladaEffect::~ColladaEffect(void)
 {
 }
 
-/*! Fills internal data structures for \c <profile_COMMON>.
+/*! Fills internal data structures for \c &lt;profile_COMMON&gt;.
     This mainly collects relevant parameters so they can be looked up
     efficiently when creating an instance of this effect.
  */
@@ -295,7 +323,7 @@ ColladaEffect::readProfileCommon(domProfile_COMMON *prof)
                 ColladaElementFactory::the()->create(
                     paramSurface, getGlobal()));
 
-            param.colSurface->read();
+            param.colSurface->read(this);
 
             _surfaceParams[newParams[i]->getSid()] = param;
             continue;
@@ -314,7 +342,7 @@ ColladaEffect::readProfileCommon(domProfile_COMMON *prof)
                     paramSampler2D, getGlobal()));
 
             param.colSampler2D->setEffect(this);
-            param.colSampler2D->read     (    );
+            param.colSampler2D->read     (this);
 
             _sampler2DParams[newParams[i]->getSid()] = param;
             continue;
@@ -343,8 +371,8 @@ ColladaEffect::readProfileCG(domProfile_CG *prof)
     SWARNING << "ColladaEffect::readProfileCG: NIY." << std::endl;
 }
 
-/*! Create an OpenSG material that matches this \c <profile_COMMON> material
-    (to the extent possible).
+/*! Create an OpenSG material that matches this \c &lt;profile_COMMON&gt;
+    material (to the extent possible).
  */
 MaterialTransitPtr
 ColladaEffect::createInstanceProfileCommon(
@@ -454,7 +482,10 @@ ColladaEffect::createInstanceProfileCommon(
 
         if(value != NULL)
         {
-            matChunk->setShininess(value->getValue());
+            Real32 shininessVal = value->getValue();
+            shininessVal = osgClamp(0.f, shininessVal, 128.f);
+
+            matChunk->setShininess(shininessVal);
         }
         else if(param != NULL)
         {
@@ -466,6 +497,9 @@ ColladaEffect::createInstanceProfileCommon(
 
     if(transparency != NULL)
     {
+        // this only sets transVal to the value stored in the
+        // <transparency> tag.
+
         domCommon_float_or_param_type::domFloatRef value;
         domCommon_float_or_param_type::domParamRef param;
 
@@ -489,8 +523,8 @@ ColladaEffect::createInstanceProfileCommon(
     if(transparent != NULL)
     {
         // this handles <transparent> and <transparency> tags
-        // since they are so closely related that they need to
-        // be handled together
+        // (by considering the value of transVal) - since they are
+        // so closely related that they need to be handled together
 
         domCommon_color_or_texture_type::domColorRef   color;
         domCommon_color_or_texture_type::domParamRef   param;
@@ -637,7 +671,7 @@ ColladaEffect::createInstanceProfileCommon(
     }
     else if(transparency != NULL)
     {
-        // handle no <transparent>, but <transparency> tag
+        // handle only <transparency> tag case (no <transparent> tag)
 
         Color4f constCol(transVal, transVal, transVal, transVal);
 
@@ -657,7 +691,6 @@ ColladaEffect::createInstanceProfileCommon(
                              "%f\n", constCol[0]));
         }
     }
-
 
     mat->addChunk(matChunk);
 
@@ -947,7 +980,6 @@ ColladaEffect::handleProfileCommonSpecular(
 {
     if(specular == NULL)
         return;
-
     domCommon_color_or_texture_type::domColorRef   color;
     domCommon_color_or_texture_type::domParamRef   param;
     domCommon_color_or_texture_type::domTextureRef texture;
@@ -994,7 +1026,7 @@ ColladaEffect::readImageArray(const domImage_Array &images)
                 ColladaElementFactory::the()->create(
                     images[i], getGlobal()));
 
-            colImg->read();
+            colImg->read(this);
         }
     }
 }

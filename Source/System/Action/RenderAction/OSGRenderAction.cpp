@@ -516,7 +516,11 @@ Action::ResultE RenderAction::start(void)
 
     _pActivePartition->setFrustumCulling (_bFrustumCulling         );
     _pActivePartition->setVolumeDrawing  (_bVolumeDrawing          );
+    _pActivePartition->setZWriteTrans    (_bZWriteTrans            );
     _pActivePartition->setCorrectNegScale(_bCorrectTwoSidedLighting);
+
+    _pActivePartition->getDrawEnv().setDrawerId  (_iDrawerId  );
+    _pActivePartition->getDrawEnv().setDrawableId(_iDrawableId);
 
     _pActivePartition->init();
 
@@ -688,7 +692,7 @@ void RenderAction::drawBuffer(UInt32 buf)
 //        _vRenderPartitions[buf][i]->exit();
         }
 
-        _vRenderPartitions[buf][0]->doExecution();
+        _vRenderPartitions[buf][0]->doExecution(true);
 //    _vRenderPartitions[buf][0]->exit();
 
         if(_bUseGLFinish == true)
@@ -882,8 +886,12 @@ void RenderAction::pushPartition(UInt32                uiCopyOnPush,
     _pActivePartition->setStatCollector  (_pStatistics                      );
     _pActivePartition->setFrustumCulling (_bFrustumCulling                  );
     _pActivePartition->setVolumeDrawing  (_bVolumeDrawing                   );
+    _pActivePartition->setZWriteTrans    (_bZWriteTrans                     );
 
     _pActivePartition->setCorrectNegScale(_bCorrectTwoSidedLighting         );
+
+    _pActivePartition->getDrawEnv().setDrawerId  (_iDrawerId  );
+    _pActivePartition->getDrawEnv().setDrawableId(_iDrawableId);
 
     _pActivePartition->initFrom(_sRenderPartitionStack.top(),
                                 _vRenderPartitions[_currentBuffer][0],

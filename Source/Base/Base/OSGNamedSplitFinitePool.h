@@ -56,6 +56,7 @@ class PoolDefaultTag;
 
 /*! \ingroup GrpBaseBasePools
     \ingroup GrpBaseBase
+    \ingroup GrpLibOSGBase
     \nohierarchy
 */
 
@@ -97,9 +98,7 @@ class NamedSplitFinitePool
           StoredType  getFrom2(const Char8      *szName );
           StoredType  getAuto (const Char8      *szName );
     const Char8      *findName(const StoredType &val    );
-#if 0
-          void        release (      StoredType oElement);
-#endif
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                       free                                   */

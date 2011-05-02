@@ -52,41 +52,21 @@ OSG_SINGLETON_INST(GLDefineMapperBase, addPostFactoryExitFunction)
 
 template class SingletonHolder<GLDefineMapperBase>;
 
-#if 0
-GLDefineMapperBase::GLEnum::GLEnum(const GLenum val) :
-    _val(val)
-{
-}
-#endif
-
-const std::string GLDefineMapperBase::szUnknown("NONEXX");
-
-
-const std::string &GLDefineMapperBase::toString(const GLenum eval) const
-{
-    MapFromEnum::const_iterator mIt = _mFromEnum.find(eval);
-
-    if(mIt != _mFromEnum.end())
-    {
-        return mIt->second;
-    }
-    else
-    {
-        return szUnknown;
-    }
-}
 
 GLenum GLDefineMapperBase::fromString(const Char8  *sval) const
 {
     GLenum returnValue = 0x0000;
 
+    if(sval == NULL)
+        return returnValue;
+
     if((sval[0] != '\0' && sval[0] == 'G') &&
        (sval[1] != '\0' && sval[1] == 'L') &&
        (sval[2] != '\0' && sval[2] == '_')   )
     {
-        MapToEnum::const_iterator mIt = _mToEnum.find(sval + 3);
+        MapToValue::const_iterator mIt = _mToValue.find(sval + 3);
 
-        if(mIt != _mToEnum.end())
+        if(mIt != _mToValue.end())
         {
             returnValue = mIt->second;
         }
@@ -95,15 +75,21 @@ GLenum GLDefineMapperBase::fromString(const Char8  *sval) const
             FWARNING(("Unknow gl constant : %s\n", sval));
         }
     }
+    else
+    {
+        returnValue = Inherited::fromString(sval);
+    }
+
+#if 0
     else if(sval[0] >= 48 && sval[0] <= 57)
     {
         returnValue = TypeTraits<GLenum>::getFromCString(sval);
     }
     else
     {
-        MapToEnum::const_iterator mIt = _mToEnum.find(sval);
+        MapToValue::const_iterator mIt = _mToValue.find(sval);
 
-        if(mIt != _mToEnum.end())
+        if(mIt != _mToValue.end())
         {
             returnValue = mIt->second;
         }
@@ -112,64 +98,20 @@ GLenum GLDefineMapperBase::fromString(const Char8  *sval) const
             FWARNING(("Unknow gl constant : %s\n", sval));
         }
     }
+#endif
 
     return returnValue;
 }
 
 
 GLDefineMapperBase::GLDefineMapperBase(void) :
-    _mToEnum  (),
-    _mFromEnum()
+    Inherited()
 {
     initMaps();
 }
 
 GLDefineMapperBase::~GLDefineMapperBase(void)
 {
-}
-
-void GLDefineMapperBase::addToEnumPair(const std::string &sval, 
-                                       const      GLenum  eval)
-{
-#ifdef OSG_DEBUG
-    MapToEnum::const_iterator mIt = _mToEnum.find(sval);
-
-    if(mIt != _mToEnum.end())
-    {
-        fprintf(stderr, "%s already present : %x|%x\n",
-                sval.c_str(),
-                eval,
-                mIt->second);
-    }
-    else
-    {
-#endif
-        _mToEnum.insert(std::make_pair(sval, eval));
-#ifdef OSG_DEBUG
-    }
-#endif
-}
-
-void GLDefineMapperBase::addFromEnumPair(const      GLenum  eval, 
-                                         const std::string &sval)
-{
-#ifdef OSG_DEBUG
-    MapFromEnum::const_iterator mIt = _mFromEnum.find(eval);
-
-    if(mIt != _mFromEnum.end())
-    {
-        fprintf(stderr, "%x already present : %s|%s\n",
-                eval,
-                sval.c_str(),
-                mIt->second.c_str());
-    }
-    else
-    {
-#endif
-        _mFromEnum.insert(std::make_pair(eval, sval));
-#ifdef OSG_DEBUG
-    }
-#endif
 }
 
 OSG_END_NAMESPACE

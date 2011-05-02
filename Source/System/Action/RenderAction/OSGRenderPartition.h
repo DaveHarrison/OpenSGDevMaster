@@ -80,7 +80,10 @@ class RenderAction;
 //---------------------------------------------------------------------------
 
 /*! \brief RenderPartition is the core class for keeping track of the actions 
-            necessary to draw a scene. 
+           necessary to draw a scene. 
+
+    \ingroup GrpSystemRenderAction
+    \ingroup GrpLibOSGSystem
  */
 
 class OSG_SYSTEM_DLLMAPPING RenderPartition : public RenderPartitionBase
@@ -259,12 +262,12 @@ class OSG_SYSTEM_DLLMAPPING RenderPartition : public RenderPartitionBase
 
     void initVPMatricesFromCamera(void                           );
 
-    void setVPCameraMatrices     (const Matrixr &mFullprojection,
-                                  const Matrixr &mProjection,
-                                  const Matrixr &mProjectionTrans,
-                                  const Matrixr &mViewing,
-                                  const Matrixr &mToWorld,
-                                  const Matrixr &mWorldToScreen  );
+    void setVPCameraMatrices     (const Matrix  &mFullprojection,
+                                  const Matrix  &mProjection,
+                                  const Matrix  &mProjectionTrans,
+                                  const Matrix  &mViewing,
+                                  const Matrix  &mToWorld,
+                                  const Matrix  &mWorldToScreen  );
 
     /*------------------------- your_operators ------------------------------*/
 
@@ -347,6 +350,8 @@ class OSG_SYSTEM_DLLMAPPING RenderPartition : public RenderPartitionBase
     // control frustum
     const FrustumVolume &getFrustum       (void                ) const;
     void                 setFrustum       (FrustumVolume &frust);    
+
+    /*-------------------------- comparison ---------------------------------*/
 
     /*-------------------------- comparison ---------------------------------*/
 
@@ -499,7 +504,7 @@ class OSG_SYSTEM_DLLMAPPING RenderPartition : public RenderPartitionBase
     // Roots
 
     void setupExecution(bool bUpdateGlobalViewport = false);
-    void doExecution   (void                              );
+    void doExecution   (bool bRestoreViewport      = false);
 
     /*-------------------------- comparison ---------------------------------*/
 

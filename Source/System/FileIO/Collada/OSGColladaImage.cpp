@@ -42,7 +42,7 @@
 
 #include "OSGColladaImage.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGImageFileHandler.h"
@@ -61,7 +61,7 @@ ColladaImage::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaImage::read(void)
+ColladaImage::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaImage::read\n"));
 

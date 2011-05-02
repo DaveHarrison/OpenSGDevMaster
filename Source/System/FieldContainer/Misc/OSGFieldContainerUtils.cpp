@@ -122,6 +122,17 @@ bool compareContainerEqualImpl(
            lhsField->getType   ().getClass() == FieldType::ParentPtrField   )
             continue;
 
+        SFAttachmentPtrMap::GetHandlePtr  lhsAMHandle =
+            boost::dynamic_pointer_cast<SFAttachmentPtrMap::GetHandle>(
+                lhsField);
+
+        if(lhsAMHandle            != NULL && 
+           lhsAMHandle->isValid() == true &&
+           ignoreAttachments      == true  )
+        {
+            continue;
+        }
+
         if(compareIdentity == true)
         {
             if(lhsField->equal(rhsField) == false)
@@ -296,11 +307,16 @@ bool compareContainerEqual(
 
 void MemoryConsumption::scan(void)
 {
-    UInt32 numCont = FieldContainerFactory::the()->getNumContainers();
+    FieldContainerFactory::the()->lockStore();
 
-    for(UInt32 i = 0; i < numCont; ++i)
+    FieldContainerFactoryBase::ContainerStoreConstIt sIt  =
+        FieldContainerFactory::the()->beginStore();
+    FieldContainerFactoryBase::ContainerStoreConstIt sEnd =
+        FieldContainerFactory::the()->endStore();
+
+    for(; sIt != sEnd; ++sIt)
     {
-        FieldContainer *pFC = FieldContainerFactory::the()->getContainer(i);
+        FieldContainer *pFC = (*sIt).second->getPtr();
 
         if(pFC == NULL)
             continue;
@@ -318,6 +334,8 @@ void MemoryConsumption::scan(void)
             _memMap[pFC->getType().getId()] = MemCountPair(binSize, 1);
         }
     }
+
+    FieldContainerFactory::the()->unlockStore();
 }
 
 
@@ -372,9 +390,11 @@ MemoryConsumption::TypeMemMapConstIt MemoryConsumption::endMap(void) const
 //---------------------------------------------------------------------------
 
 SceneGraphPrinter::SceneGraphPrinter(Node *root)
-    : _pRoot  (root),
-      _pStream(NULL),
-      _indent (0)
+    : _pRoot       (root),
+      _pCurrNode   (NULL),
+      _pStream     (NULL),
+      _indent      (0),
+      _printFuncMap()
 {
     // nothing to do
 }
@@ -401,6 +421,7 @@ void SceneGraphPrinter::printUpTree(std::ostream &os)
     while(node != NULL)
     {
         NodeCore *core = node->getCore();
+        _pCurrNode = node;
 
         os <<      "[" << node
            <<    "] [" << node->getId()
@@ -459,10 +480,18 @@ SceneGraphPrinter::getStream(void)
     return *_pStream;
 }
 
+Node *
+SceneGraphPrinter::getCurrNode(void)
+{
+    return _pCurrNode;
+}
+
 Action::ResultE SceneGraphPrinter::traverseEnter(Node *node)
 {
     if(node == NULL)
         return Action::Continue;
+
+    _pCurrNode = node;
 
     std::ostream &os = getStream();
     incIndent();
@@ -531,6 +560,9 @@ Action::ResultE SceneGraphPrinter::traverseLeave(
 
     return Action::Continue;
 }
+
+/*! \nohierarchy
+ */
 
 struct FieldPathEntry
 {

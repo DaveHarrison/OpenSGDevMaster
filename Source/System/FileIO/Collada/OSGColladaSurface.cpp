@@ -42,7 +42,7 @@
 
 #include "OSGColladaSurface.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaImage.h"
@@ -63,7 +63,7 @@ ColladaSurface::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaSurface::read(void)
+ColladaSurface::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaSurface::read\n"));
 
@@ -98,7 +98,6 @@ ColladaSurface::read(void)
     case FX_SURFACE_TYPE_ENUM_DEPTH:
         readDepth(surface);
         break;
-
     case FX_SURFACE_TYPE_ENUM_COUNT:
         SWARNING << "ColladaSurface::read FX_SURFACE_TYPE_ENUM_COUNT "
                  << "not handled"
@@ -181,7 +180,7 @@ ColladaSurface::read2D(domFx_surface_common *surface)
             colImage = dynamic_pointer_cast<ColladaImage>(
                 ColladaElementFactory::the()->create(image, getGlobal()));
 
-            colImage->read();
+            colImage->read(this);
         }
         
         _image = colImage->getImage();

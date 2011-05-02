@@ -42,11 +42,12 @@
 
 #include "OSGColladaCOLLADA.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaGlobal.h"
 #include "OSGColladaScene.h"
+#include "OSGColladaLibraryAnimationClips.h"
 
 #include <dom/domCOLLADA.h>
 
@@ -63,7 +64,7 @@ ColladaCOLLADA::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaCOLLADA::read(void)
+ColladaCOLLADA::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaCOLLADA::read\n"));
 
@@ -101,10 +102,29 @@ ColladaCOLLADA::read(void)
         colScene = dynamic_pointer_cast<ColladaScene>(
             ColladaElementFactory::the()->create(scene, getGlobal()));
 
-        colScene->read();
+        colScene->read(this);
     }
+    if(getGlobal()->getOptions()->getLoadAnimations() == true)
+    {
+        const domLibrary_animation_clips_Array &animClipLibs =
+            collada->getLibrary_animation_clips_array();
 
-    colScene->process();
+        for(UInt32 i = 0; i < animClipLibs.getCount(); ++i)
+        {
+            ColladaLibraryAnimationClipsRefPtr colLibAnimClips =
+                getUserDataAs<ColladaLibraryAnimationClips>(animClipLibs[i]);
+
+            if(colLibAnimClips == NULL)
+            {
+                colLibAnimClips =
+                    dynamic_pointer_cast<ColladaLibraryAnimationClips>(
+                        ColladaElementFactory::the()->create(
+                            animClipLibs[i], getGlobal()));
+
+                colLibAnimClips->read(this);
+            }
+        }
+    }
 }
 
 ColladaCOLLADA::ColladaCOLLADA(daeElement *elem, ColladaGlobal *global)

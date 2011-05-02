@@ -25,10 +25,10 @@ IF(X11_FOUND AND OSGBUILD_OSGWindowX AND NOT APPLE)
     SET(_CSM_HAS_NATIVE_WIN TRUE)
 ENDIF(X11_FOUND AND OSGBUILD_OSGWindowX AND NOT APPLE)
 
-IF(APPLE AND OSG_CARBON_FRAMEWORK)
-#    SET(_BUILD_CSM_WINDOWCARBON ON)
-#    SET(_CSM_HAS_NATIVE_WIN TRUE)
-ENDIF(APPLE AND OSG_CARBON_FRAMEWORK)
+IF(APPLE AND OSGBUILD_OSGWindowCocoa)
+    SET(_BUILD_CSM_WINDOWCOCOA ON)
+    SET(_CSM_HAS_NATIVE_WIN TRUE)
+ENDIF(APPLE AND OSGBUILD_OSGWindowCocoa)
 
 ##############################################################################
 # depdencies start here
@@ -81,9 +81,9 @@ IF(_BUILD_CSM_WINDOWX)
     LIST(APPEND ${PROJECT_NAME}_DEP_OSG_LIB OSGWindowX)
 ENDIF(_BUILD_CSM_WINDOWX)
 
-IF(_BUILD_CSM_WINDOWCARBON)
-    LIST(APPEND ${PROJECT_NAME}_DEP_OSG_LIB OSGWindowCarbon)
-ENDIF(_BUILD_CSM_WINDOWCARBON)
+IF(_BUILD_CSM_WINDOWCOCOA)
+    LIST(APPEND ${PROJECT_NAME}_DEP_OSG_LIB OSGWindowCocoa)
+ENDIF(_BUILD_CSM_WINDOWCOCOA)
 
 IF(_BUILD_CSM_WINDOWGLUT)
     LIST(APPEND ${PROJECT_NAME}_DEP_OSG_LIB OSGWindowGLUT)
@@ -116,6 +116,8 @@ IF(OSG_LINK_EXTERNAL_MODULES_TO_CSM)
 ENDIF(OSG_LINK_EXTERNAL_MODULES_TO_CSM)
 
 SET(${PROJECT_NAME}_CXXFLAGS ${OSG_ADD_CXX_FLAGS})
+
+SET(${PROJECT_NAME}_NO_DOC TRUE)
 
 OSG_STORE_PROJECT_DEPENDENCIES()
 
@@ -151,15 +153,21 @@ IF(_BUILD_CSM_WINDOWX)
     OSG_ADD_DIRECTORY("Source/Contrib/ComplexSceneManager/Native-X")
 ENDIF(_BUILD_CSM_WINDOWX)
 
-IF(_BUILD_CSM_WINDOWCARBON)
-    OSG_ADD_DIRECTORY("Source/Contrib/ComplexSceneManager/Native-Carbon")
-ENDIF(_BUILD_CSM_WINDOWCARBON)
+IF(_BUILD_CSM_WINDOWCOCOA)
+    OSG_ADD_DIRECTORY("Source/Contrib/ComplexSceneManager/Native-Cocoa")
+ENDIF(_BUILD_CSM_WINDOWCOCOA)
 
 IF(NOT _CSM_HAS_NATIVE_WIN)
     OSG_ADD_DIRECTORY("Source/Contrib/ComplexSceneManager/Native-Dummy")
 ENDIF(NOT _CSM_HAS_NATIVE_WIN)
 
 LIST(APPEND OSG_IGNORE_CLASSBUILD OSGCSMNativeWindow)
+
+##############################################################################
+# setup python bindings
+##############################################################################
+
+#SET(${PROJECT_NAME}_NO_PYTHON TRUE)
 
 ##############################################################################
 # setup build

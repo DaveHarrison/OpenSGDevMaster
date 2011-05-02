@@ -541,7 +541,8 @@ void ComplexSceneManager::addData(const std::string &filename)
         OSG::SceneFileHandler::the()->read(
             szFilenameResolved.c_str(), 
             NULL,
-            boost::bind(&ComplexSceneManager::resolve, this, _1));
+            boost::bind(&ComplexSceneManager::resolve, this, _1),
+            true);
 
     _oPathHandler.popState();
 

@@ -160,39 +160,39 @@ ShaderProgramVariableChunkBase::TypeObject ShaderProgramVariableChunkBase::_type
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "   name=\"ShaderProgramVariableChunk\"\n"
-    "   parent=\"StateChunk\"\n"
-    "   library=\"System\"\n"
-    "   pointerfieldtypes=\"both\"\n"
-    "   structure=\"concrete\"\n"
-    "   systemcomponent=\"true\"\n"
-    "   parentsystemcomponent=\"true\"\n"
-    "   decoratable=\"false\"\n"
-    "   useLocalIncludes=\"false\"\n"
-    "   docGroupBase=\"GrpSystemShader\"\n"
-    "   >\n"
-    "  <Field\n"
-    "     name=\"variables\"\n"
-    "     type=\"ShaderProgramVariables\"\n"
-    "     cardinality=\"single\"\n"
-    "     visibility=\"external\"\n"
-    "     access=\"public\"\n"
-    "     category=\"childpointer\"\n"
-    "     childParentType=\"FieldContainer\"\n"
-    "     linkParentField=\"Parents\"\n"
-    "     >\n"
-    "  </Field>\n"
+    "    name=\"ShaderProgramVariableChunk\"\n"
+    "    parent=\"StateChunk\"\n"
+    "    library=\"System\"\n"
+    "    pointerfieldtypes=\"both\"\n"
+    "    structure=\"concrete\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    decoratable=\"false\"\n"
+    "    useLocalIncludes=\"false\"\n"
+    "    docGroupBase=\"GrpSystemShader\"\n"
+    "    >\n"
+    "    <Field\n"
+    "        name=\"variables\"\n"
+    "        type=\"ShaderProgramVariables\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        category=\"childpointer\"\n"
+    "        childParentType=\"FieldContainer\"\n"
+    "        linkParentField=\"Parents\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "     name=\"destroyedFunctors\"\n"
-    "     type=\"ChangedFunctorCallback\"\n"
-    "     cardinality=\"multi\"\n"
-    "     visibility=\"internal\"\n"
-    "     access=\"none\"\n"
-    "     defaultHeader=\"OSGChangedFunctorMFields.h\"\n"
-    "     fieldFlags=\"FClusterLocal\"\n"
-    "     >\n"
-    "  </Field> \n"
+    "    <Field\n"
+    "        name=\"destroyedFunctors\"\n"
+    "        type=\"ChangedFunctorCallback\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"none\"\n"
+    "        defaultHeader=\"OSGChangedFunctorMFields.h\"\n"
+    "        fieldFlags=\"FClusterLocal\"\n"
+    "        >\n"
+    "    </Field> \n"
     "</FieldContainer>\n",
     ""
     );
@@ -275,10 +275,12 @@ void ShaderProgramVariableChunkBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (VariablesFieldMask & whichField))
     {
+        editSField(VariablesFieldMask);
         _sfVariables.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (DestroyedFunctorsFieldMask & whichField))
     {
+        editMField(DestroyedFunctorsFieldMask, _mfDestroyedFunctors);
         _mfDestroyedFunctors.copyFromBin(pMem);
     }
 }
@@ -443,7 +445,7 @@ bool ShaderProgramVariableChunkBase::unlinkChild(
 
         if(pTypedChild != NULL)
         {
-            if(pTypedChild == _sfVariables.getValue())
+            if(_sfVariables.getValue() == pTypedChild)
             {
                 editSField(VariablesFieldMask);
 
@@ -452,8 +454,15 @@ bool ShaderProgramVariableChunkBase::unlinkChild(
                 return true;
             }
 
-            FWARNING(("ShaderProgramVariableChunkBase::unlinkParent: Child <-> "
-                      "Parent link inconsistent.\n"));
+            SWARNING << "Parent (["        << this
+                     << "] id ["           << this->getId()
+                     << "] type ["         << this->getType().getCName()
+                     << "] childFieldId [" << childFieldId
+                     << "]) - Child (["    << pChild
+                     << "] id ["           << pChild->getId()
+                     << "] type ["         << pChild->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

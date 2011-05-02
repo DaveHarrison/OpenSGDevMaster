@@ -50,7 +50,11 @@ OSG_BEGIN_NAMESPACE
 
 /*! \brief DisplayFilterStage class. See \ref
            PageEffectGroupsDisplayFilterStage for a description.
-*/
+
+    \ingroup GrpEffectsGroupsDisplayFilterObj
+    \ingroup GrpLibOSGEffectsGroups
+    \includebasedoc
+ */
 
 class OSG_EFFECTGROUPS_DLLMAPPING DisplayFilterStage : 
     public DisplayFilterStageBase
@@ -115,7 +119,9 @@ class OSG_EFFECTGROUPS_DLLMAPPING DisplayFilterStage :
     /*! \name                   Draw                                       */
     /*! \{                                                                 */
 
-    void postProcess(DrawEnv *pEnv);
+    void processCalibActive  (DrawEnv *pEnv);
+    void processCalibInactive(DrawEnv *pEnv);
+    void postProcess         (DrawEnv *pEnv);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

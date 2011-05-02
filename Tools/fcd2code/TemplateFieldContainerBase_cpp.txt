@@ -615,12 +615,18 @@ void @!Classname!@Base::copyFromBin(BinaryDataHandler &pMem,
 @@if isDecorator
     if(FieldBits::NoField != (DecorateeFieldMask & whichField))
     {
+        editSField(DecorateeFieldMask);
         _sfDecoratee.copyFromBin(pMem);
     }
 @@else // isDecorator
     @@BeginFieldLoop@@
     if(FieldBits::NoField != (@!field.Name!@FieldMask & whichField))
     {
+    @@if field.isSField
+        editSField(@!field.Name!@FieldMask);
+    @@else
+        editMField(@!field.Name!@FieldMask, _@!field.VarName!@);
+    @@endif
         _@!field.VarName!@.copyFromBin(pMem);
     }
     @@EndFieldLoop@@
@@ -859,7 +865,7 @@ bool @!Classname!@Base::linkParent(
             @@if field.isMField
             editMField(@!field.Name!@FieldMask, _@!field.VarName!@);
 
-            _@!field.VarName!@.push_back(pParent, childFieldId);
+            _@!field.VarName!@.push_back(pTypedParent, childFieldId);
             @@endif // @!field.cardinality!@ == "multi"
 
             return true;
@@ -887,7 +893,7 @@ bool @!Classname!@Base::unlinkParent(
         if(pTypedParent != NULL)
         {
             @@if field.isSField
-            if(_@!field.VarName!@.getValue() == pParent)
+            if(_@!field.VarName!@.getValue() == pTypedParent)
             {
                 editSField(@!field.Name!@FieldMask);
 
@@ -897,7 +903,7 @@ bool @!Classname!@Base::unlinkParent(
             }
             @@endif // @!field.cardinality!@ == "single"
             @@if field.isMField
-            Int32 iParentIdx = _@!field.VarName!@.findIndex(pParent);
+            Int32 iParentIdx = _@!field.VarName!@.findIndex(pTypedParent);
 
             if(iParentIdx != -1)
             {
@@ -909,8 +915,15 @@ bool @!Classname!@Base::unlinkParent(
             }
             @@endif // @!field.cardinality!@ == "multi"
 
-            FWARNING(("@!Classname!@Base::unlinkParent: "
-                      "Child <-> Parent link inconsistent.\n"));
+            SWARNING << "Child (["          << this
+                     << "] id ["            << this->getId()
+                     << "] type ["          << this->getType().getCName()
+                     << "] parentFieldId [" << parentFieldId
+                     << "]) - Parent (["    << pParent
+                     << "] id ["            << pParent->getId()
+                     << "] type ["          << pParent->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }
@@ -943,7 +956,7 @@ bool @!Classname!@Base::unlinkChild(
         if(pTypedChild != NULL)
         {
             @@if field.isSField
-            if(pTypedChild == _@!field.VarName!@.getValue())
+            if(_@!field.VarName!@.getValue() == pTypedChild)
             {
                 editSField(@!field.Name!@FieldMask);
 
@@ -965,8 +978,15 @@ bool @!Classname!@Base::unlinkChild(
             }
             @@endif // @!field.cardinality!@ == "multi"
 
-            FWARNING(("@!Classname!@Base::unlinkParent: Child <-> "
-                      "Parent link inconsistent.\n"));
+            SWARNING << "Parent (["        << this
+                     << "] id ["           << this->getId()
+                     << "] type ["         << this->getType().getCName()
+                     << "] childFieldId [" << childFieldId
+                     << "]) - Child (["    << pChild
+                     << "] id ["           << pChild->getId()
+                     << "] type ["         << pChild->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

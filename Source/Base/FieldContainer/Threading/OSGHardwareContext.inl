@@ -41,9 +41,21 @@
 OSG_BEGIN_NAMESPACE
 
 inline
-UInt32 HardwareContext::getInitState(void)
+UInt32 HardwareContext::getInitState(void) const
 {
     return _uiInitState;
+}
+
+inline
+UInt32 HardwareContext::getOGLFeatures(void) const
+{
+    return _uiOGLFeatures;
+}
+
+inline
+bool HardwareContext::hasAttribAliasing(void) const
+{
+    return (_uiOGLFeatures & HasAttribAliasing) != 0x0000;
 }
 
 OSG_END_NAMESPACE

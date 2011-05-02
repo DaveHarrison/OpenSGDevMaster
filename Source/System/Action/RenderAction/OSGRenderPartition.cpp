@@ -75,7 +75,7 @@
 
 #include "OSGOSGSceneFileType.h"
 
-OSG_USING_NAMESPACE
+OSG_BEGIN_NAMESPACE
 
 /***************************************************************************\
  *                            Description                                  *
@@ -203,7 +203,8 @@ RenderPartition::~RenderPartition(void)
 
 /*------------------------------ access -----------------------------------*/
 
-OSG_BEGIN_NAMESPACE
+/*! \nohierarchy
+ */
 
 struct ResetSecond
 {
@@ -212,8 +213,6 @@ struct ResetSecond
         oPair.second = NULL;
     }
 };
-
-OSG_END_NAMESPACE
 
 void RenderPartition::reset(Mode eMode)
 {
@@ -313,7 +312,7 @@ void RenderPartition::reset(Mode eMode)
 
 void RenderPartition::calcFrustum(void)
 {
-    Matrix pr = _oDrawEnv.getCameraFullProjection();
+    Matrix pr = _oDrawEnv._openGLState.getProjection();
 
     pr.mult(_oDrawEnv.getCameraViewing());
 
@@ -388,8 +387,10 @@ void RenderPartition::setupExecution(bool bUpdateGlobalViewport)
     // We always push so stages with callbacks can modify the values
     // as needed
 
+#ifndef OSG_OGL_COREONLY
     if(bUpdateGlobalViewport == false)
         glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+#endif
 
     if(0x0000 != (_uiSetupMode & ViewportSetup))
     {
@@ -420,6 +421,7 @@ void RenderPartition::setupExecution(bool bUpdateGlobalViewport)
         glDisable(GL_SCISSOR_TEST);
     }
 
+#ifndef OSG_OGL_COREONLY
     if(bUpdateGlobalViewport == true)
         glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
 
@@ -428,10 +430,11 @@ void RenderPartition::setupExecution(bool bUpdateGlobalViewport)
         glMatrixMode (GL_PROJECTION);
         glPushMatrix();
 
-        glLoadMatrixf(_oDrawEnv.getCameraFullProjection().getValues());
+        glLoadMatrixf(_oDrawEnv._openGLState.getProjection().getValues());
 
         glMatrixMode(GL_MODELVIEW);
     }
+#endif
 
     RenderCallbackStore::const_iterator cbIt  = _vPreRenderCallbacks.begin();
     RenderCallbackStore::const_iterator cbEnd = _vPreRenderCallbacks.end  ();
@@ -451,7 +454,7 @@ void RenderPartition::setupExecution(bool bUpdateGlobalViewport)
     }
 }
 
-void RenderPartition::doExecution   (void)
+void RenderPartition::doExecution(bool bRestoreViewport)
 {
     if(_bDone == true)
         return;
@@ -459,6 +462,40 @@ void RenderPartition::doExecution   (void)
 #ifdef OSG_TRACE_PARTITION
     FDEBUG(("RenderPartition::doExecution '%s'\n",
             _szDebugString.c_str()));
+#endif
+
+#ifdef OSG_OGL_COREONLY
+    if(bRestoreViewport == true)
+    {
+        if(0x0000 != (_uiSetupMode & ViewportSetup))
+        {
+            if(0x0000 == (_uiSetupMode & PassiveBit))
+            {
+                glViewport(_oDrawEnv.getPixelLeft  (),
+                           _oDrawEnv.getPixelBottom(),
+                           _oDrawEnv.getPixelWidth (),
+                           _oDrawEnv.getPixelHeight());
+                
+                if(_oDrawEnv.getFull() == false)
+                {
+                    glScissor (_oDrawEnv.getPixelLeft  (),
+                               _oDrawEnv.getPixelBottom(),
+                               _oDrawEnv.getPixelWidth (),
+                               _oDrawEnv.getPixelHeight());
+                    
+                    glEnable(GL_SCISSOR_TEST);
+                }
+                else
+                {
+                    glDisable(GL_SCISSOR_TEST);
+                }
+            }
+        }
+        else
+        {
+            glDisable(GL_SCISSOR_TEST);
+        }
+    }
 #endif
 
     if(_eMode == SimpleCallback)
@@ -484,6 +521,8 @@ void RenderPartition::doExecution   (void)
 
         mapIt  = _mTransMatTrees.begin();
         mapEnd = _mTransMatTrees.end  ();
+
+        _oDrawEnv.deactivateState();
 
         if(!_bZWriteTrans)
             glDepthMask(false);
@@ -511,17 +550,21 @@ void RenderPartition::doExecution   (void)
         ++cbIt;
     }
 
+#ifndef OSG_OGL_COREONLY
     if(0x0000 != (_uiSetupMode & ProjectionSetup))
     {
         glMatrixMode (GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
     }
+#endif
 
     // We always push/pop so stages with callback can modify the values
     // as needed
 
+#ifndef OSG_OGL_COREONLY
     glPopAttrib();
+#endif
 
     if(_pRenderTarget != NULL)
         _pRenderTarget->deactivate(&_oDrawEnv);
@@ -568,7 +611,7 @@ void RenderPartition::execute(HardwareContext *pContext, DrawEnv *pEnv)
 
         case Execute:
         {
-            this->doExecution();
+            this->doExecution(true);
             ++_ubState;
         }
         break;
@@ -657,7 +700,7 @@ bool RenderPartition::pushShaderState(State *pState)
 
         if(pShader == NULL)
         {
-            pShader = ShaderExecutableChunk::create();
+            pShader = ShaderExecutableChunk::createLocal();
 
             typedef StateOverride::ProgramChunkStore ProgChunkStore;
 
@@ -694,7 +737,7 @@ bool RenderPartition::pushShaderState(State *pState)
 
         if(pShaderVar == NULL)
         {
-            pShaderVar = ShaderExecutableVarChunk::create();
+            pShaderVar = ShaderExecutableVarChunk::createLocal();
 
             typedef StateOverride::ProgramVarChunkStore ProgVarChunkStore;
 
@@ -1242,12 +1285,12 @@ void RenderPartition::initVPMatricesFromCamera(void)
     _oDrawEnv.initVPMatricesFromCamera();
 }
 
-void RenderPartition::setVPCameraMatrices(const Matrixr &mFullprojection,
-                                          const Matrixr &mProjection,
-                                          const Matrixr &mProjectionTrans,
-                                          const Matrixr &mViewing,
-                                          const Matrixr &mToWorld,
-                                          const Matrixr &mWorldToScreen  )
+void RenderPartition::setVPCameraMatrices(const Matrix &mFullprojection,
+                                          const Matrix &mProjection,
+                                          const Matrix &mProjectionTrans,
+                                          const Matrix &mViewing,
+                                          const Matrix &mToWorld,
+                                          const Matrix &mWorldToScreen  )
 {
     _oDrawEnv.setVPCameraMatrices(mFullprojection,
                                   mProjection,
@@ -1322,3 +1365,5 @@ const Matrix &RenderPartition::topMatrix(void)
 
 /*-------------------------------------------------------------------------*/
 /*                              cvs id's                                   */
+
+OSG_END_NAMESPACE

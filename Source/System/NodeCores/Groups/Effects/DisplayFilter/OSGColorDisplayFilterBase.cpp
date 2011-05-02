@@ -222,7 +222,7 @@ void ColorDisplayFilterBase::classDescInserter(TypeObject &oType)
         "",
         TableImageFieldId, TableImageFieldMask,
         true,
-        (Field::FClusterLocal),
+        (Field::FStdAccess | Field::FClusterLocal),
         static_cast<FieldEditMethodSig>(&ColorDisplayFilter::editHandleTableImage),
         static_cast<FieldGetMethodSig >(&ColorDisplayFilter::getHandleTableImage));
 
@@ -234,7 +234,7 @@ void ColorDisplayFilterBase::classDescInserter(TypeObject &oType)
         "",
         FilterShaderFieldId, FilterShaderFieldMask,
         false,
-        (Field::FClusterLocal),
+        (Field::FStdAccess | Field::FClusterLocal),
         static_cast<FieldEditMethodSig>(&ColorDisplayFilter::editHandleFilterShader),
         static_cast<FieldGetMethodSig >(&ColorDisplayFilter::getHandleFilterShader));
 
@@ -256,92 +256,93 @@ ColorDisplayFilterBase::TypeObject ColorDisplayFilterBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "   name=\"ColorDisplayFilter\"\n"
-    "   parent=\"DisplayFilter\"\n"
-    "   library=\"EffectGroups\"\n"
-    "   pointerfieldtypes=\"both\"\n"
-    "   structure=\"concrete\"\n"
-    "   systemcomponent=\"true\"\n"
-    "   parentsystemcomponent=\"true\"\n"
-    "   decoratable=\"false\"\n"
-    "   useLocalIncludes=\"false\"\n"
-    "   >   \n"
-    "  <Field\n"
-    "\t name=\"gamma\"\n"
-    "\t type=\"Real32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"1.0\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    name=\"ColorDisplayFilter\"\n"
+    "    parent=\"DisplayFilter\"\n"
+    "    library=\"EffectGroups\"\n"
+    "    pointerfieldtypes=\"both\"\n"
+    "    structure=\"concrete\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    decoratable=\"false\"\n"
+    "    useLocalIncludes=\"false\"\n"
+    "    docGroupBase=\"GrpEffectsGroupsDisplayFilter\"\n"
+    "    >   \n"
+    "    <Field\n"
+    "        name=\"gamma\"\n"
+    "        type=\"Real32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"1.0\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tGamma value of the rendered image\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"matrix\"\n"
-    "\t type=\"Matrix\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
-    "\tColor transformation matrix\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"colorTableWidth\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"1\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"colorTableHeight\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"1\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"colorTableDepth\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"2\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"colorTable\"\n"
-    "\t type=\"Color3f\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "\t>\n"
-    "\tShading table\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "     name=\"tableImage\"\n"
-    "     type=\"Image\"\n"
-    "     cardinality=\"single\"\n"
-    "     visibility=\"internal\"\n"
-    "     category=\"pointer\"\n"
-    "     access=\"protected\"\n"
-    "     fieldFlags=\"FClusterLocal\"\n"
-    "     >\n"
     "    </Field>\n"
     "    <Field\n"
-    "\t   name=\"filterShader\"\n"
-    "\t   type=\"SimpleSHLChunk\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"external\"\n"
-    "\t   defaultValue=\"NULL\"\n"
-    "\t   access=\"protected\"\n"
-    "       category=\"pointer\"\n"
-    "       fieldFlags=\"FClusterLocal\"\n"
-    "\t   >\n"
-    "\t</Field>\n"
+    "        name=\"matrix\"\n"
+    "        type=\"Matrix\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "\tColor transformation matrix\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"colorTableWidth\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"1\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"colorTableHeight\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"1\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"colorTableDepth\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"2\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"colorTable\"\n"
+    "        type=\"Color3f\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "\tShading table\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"tableImage\"\n"
+    "        type=\"Image\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        category=\"pointer\"\n"
+    "        access=\"protected\"\n"
+    "        fieldFlags=\"FStdAccess, FClusterLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"filterShader\"\n"
+    "        type=\"SimpleSHLChunk\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"NULL\"\n"
+    "        access=\"protected\"\n"
+    "        category=\"pointer\"\n"
+    "        fieldFlags=\"FStdAccess, FClusterLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
     "</FieldContainer>\n",
     ""
     );
@@ -562,34 +563,42 @@ void ColorDisplayFilterBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (GammaFieldMask & whichField))
     {
+        editSField(GammaFieldMask);
         _sfGamma.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (MatrixFieldMask & whichField))
     {
+        editSField(MatrixFieldMask);
         _sfMatrix.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ColorTableWidthFieldMask & whichField))
     {
+        editSField(ColorTableWidthFieldMask);
         _sfColorTableWidth.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ColorTableHeightFieldMask & whichField))
     {
+        editSField(ColorTableHeightFieldMask);
         _sfColorTableHeight.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ColorTableDepthFieldMask & whichField))
     {
+        editSField(ColorTableDepthFieldMask);
         _sfColorTableDepth.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ColorTableFieldMask & whichField))
     {
+        editMField(ColorTableFieldMask, _mfColorTable);
         _mfColorTable.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (TableImageFieldMask & whichField))
     {
+        editSField(TableImageFieldMask);
         _sfTableImage.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (FilterShaderFieldMask & whichField))
     {
+        editSField(FilterShaderFieldMask);
         _sfFilterShader.copyFromBin(pMem);
     }
 }

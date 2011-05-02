@@ -78,8 +78,6 @@ OSG_BEGIN_NAMESPACE
 \***************************************************************************/
 
 /*! \class OSG::Window
-    \ingroup GrpSystemWindow
-
     Window is the base class for all window management classes.  See \ref
     PageSystemWindowWindow for a description.
 
@@ -345,7 +343,7 @@ void WindowBase::classDescInserter(TypeObject &oType)
         "",
         DrawTasksFieldId, DrawTasksFieldMask,
         true,
-        (Field::FClusterLocal),
+        (Field::FCustomAccess | Field::FClusterLocal),
         static_cast<FieldEditMethodSig>(&Window::editHandleDrawTasks),
         static_cast<FieldGetMethodSig >(&Window::getHandleDrawTasks));
 
@@ -367,49 +365,49 @@ WindowBase::TypeObject WindowBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "\tname=\"Window\"\n"
-    "\tparent=\"HardwareContext\"\n"
-    "\tlibrary=\"System\"\n"
-    "\tpointerfieldtypes=\"both\"\n"
-    "\tstructure=\"abstract\"\n"
-    "\tsystemcomponent=\"true\"\n"
-    "\tparentsystemcomponent=\"true\"\n"
-    ">\n"
-    "\\ingroup GrpSystemWindow\n"
+    "    name=\"Window\"\n"
+    "    parent=\"HardwareContext\"\n"
+    "    library=\"System\"\n"
+    "    pointerfieldtypes=\"both\"\n"
+    "    structure=\"abstract\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    docGroupBase=\"GrpSystemWindow\"\n"
+    "    >\n"
     "\n"
-    "Window is the base class for all window management classes.  See \\ref\n"
-    "PageSystemWindowWindow for a description.\n"
+    "    Window is the base class for all window management classes.  See \\ref\n"
+    "    PageSystemWindowWindow for a description.\n"
     "\n"
-    "\\ext\n"
+    "    \\ext\n"
     "\n"
-    "To create a new Window the methods that have to be overridden are \n"
-    "init(void), activate(void), deactivate(void) and swap(void).\n"
+    "    To create a new Window the methods that have to be overridden are \n"
+    "    init(void), activate(void), deactivate(void) and swap(void).\n"
     "\n"
-    "\\endext\n"
-    "\t<Field\n"
-    "\t\tname=\"width\"\n"
-    "\t\ttype=\"UInt16\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"external\"\n"
-    "\t\taccess=\"public\"\n"
+    "    \\endext\n"
+    "    <Field\n"
+    "        name=\"width\"\n"
+    "        type=\"UInt16\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
     "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"height\"\n"
-    "\t\ttype=\"UInt16\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"external\"\n"
-    "\t\taccess=\"public\"\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"height\"\n"
+    "        type=\"UInt16\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
     "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"port\"\n"
-    "\t\ttype=\"Viewport\"\n"
-    "\t\tcardinality=\"multi\"\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"port\"\n"
+    "        type=\"Viewport\"\n"
+    "        cardinality=\"multi\"\n"
     "        category=\"childpointer\"\n"
     "        childParentType=\"FieldContainer\"\n"
-    "\t\tvisibility=\"external\"\n"
-    "\t\taccess=\"public\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
     "        pushToFieldAs=\"addPort\"\n"
     "        insertIntoMFieldAs=\"insertPort\"\n"
     "        replaceInMFieldIndexAs=\"replacePort\"\n"
@@ -420,125 +418,123 @@ WindowBase::TypeObject WindowBase::_type(
     "        ptrFieldAccess = \"nullCheck\"\n"
     "        linkParentField=\"Parent\"\n"
     "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"glObjectEventCounter\"\n"
-    "\t\ttype=\"UInt32\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\tdefaultValue=\"1\"\n"
-    "\t\taccess=\"protected\"\n"
-    "       fieldFlags=\"FClusterLocal,FThreadLocal\"\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"glObjectEventCounter\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        defaultValue=\"1\"\n"
+    "        access=\"protected\"\n"
+    "        fieldFlags=\"FClusterLocal, FThreadLocal\"\n"
     "\t>\n"
     "\tCounter for GL object events. Needed for multi-aspect updates.\n"
     "        Is used in glObjectLastRefresh and glObjectLastReinitialize.\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"glObjectLastRefresh\"\n"
-    "\t\ttype=\"UInt32\"\n"
-    "\t\tcardinality=\"multi\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"protected\"\n"
-    "       fieldFlags=\"FClusterLocal,FThreadLocal\"\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"glObjectLastRefresh\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        fieldFlags=\"FClusterLocal, FThreadLocal\"\n"
     "\t>\n"
     "\tIndicates the last refresh for the GL object.\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"glObjectLastReinitialize\"\n"
-    "\t\ttype=\"UInt32\"\n"
-    "\t\tcardinality=\"multi\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"protected\"\n"
-    "       fieldFlags=\"FClusterLocal,FThreadLocal\"\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"glObjectLastReinitialize\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        fieldFlags=\"FClusterLocal, FThreadLocal\"\n"
     "\t>\n"
     "\tIndicates the last reinit for the GL object.\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t   name=\"drawerId\"\n"
-    "\t   type=\"Int32\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       fieldFlags=\"FClusterLocal\"\n"
-    "       defaultValue=\"-1\"\n"
-    "\t>\n"
-    "    DrawerId to select window dependent elements (e.g. Distortion filter).\n"
-    "    For cluster window this values equals the clusterId (shl chunk)\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t   name=\"requestMajor\"\n"
-    "\t   type=\"Int32\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       fieldFlags=\"\"\n"
-    "       defaultValue=\"-1\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t   name=\"requestMinor\"\n"
-    "\t   type=\"Int32\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       fieldFlags=\"\"\n"
-    "       defaultValue=\"0\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t   name=\"contextFlags\"\n"
-    "\t   type=\"Int32\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       fieldFlags=\"\"\n"
-    "       defaultValue=\"0\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t   name=\"renderOptions\"\n"
-    "\t   type=\"RenderOptionsPtr\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       defaultValue=\"NULL\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "    <Field\n"
-    "\t   name=\"drawMode\"\n"
-    "\t   type=\"UInt32\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       defaultValue=\"(Window::SequentialPartitionDraw | Window::StdDrawer | Window::ActiveContext)\"\n"
-    "       >\n"
     "    </Field>\n"
     "    <Field\n"
-    "\t   name=\"rendererInfo\"\n"
-    "\t   type=\"std::string\"\n"
-    "\t   cardinality=\"single\"\n"
-    "\t   visibility=\"internal\"\n"
-    "\t   access=\"public\"\n"
-    "       defaultValue='\"unknown\"'\n"
-    "       >\n"
+    "        name=\"drawerId\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        fieldFlags=\"FClusterLocal\"\n"
+    "        defaultValue=\"-1\"\n"
+    "\t>\n"
+    "        DrawerId to select window dependent elements (e.g. Distortion filter).\n"
+    "        For cluster window this values equals the clusterId (shl chunk)\n"
     "    </Field>\n"
     "    <Field\n"
-    "       name=\"drawTasks\"\n"
-    "       type=\"DrawTask\"\n"
-    "       cardinality=\"multi\"\n"
-    "       visibility=\"internal\"\n"
-    "       access=\"protected\"\n"
-    "       category=\"custompointer\"\n"
-    "       ptrFieldAccess=\"custom\"\n"
-    "       fieldHeader=\"OSGDrawTask.h\"\n"
-    "       typeHeader=\"OSGDrawTask.h\"\n"
-    "       fieldFlags=\"FClusterLocal\"\n"
-    "       >\n"
+    "        name=\"requestMajor\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        fieldFlags=\"\"\n"
+    "        defaultValue=\"-1\"\n"
+    "\t>\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"requestMinor\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        fieldFlags=\"\"\n"
+    "        defaultValue=\"0\"\n"
+    "\t>\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"contextFlags\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        fieldFlags=\"\"\n"
+    "        defaultValue=\"0\"\n"
+    "\t>\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"renderOptions\"\n"
+    "        type=\"RenderOptionsPtr\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"NULL\"\n"
+    "\t>\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"drawMode\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"(Window::SequentialPartitionDraw | Window::StdDrawer | Window::ActiveContext)\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"rendererInfo\"\n"
+    "        type=\"std::string\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue='\"unknown\"'\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"drawTasks\"\n"
+    "        type=\"DrawTask\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        category=\"custompointer\"\n"
+    "        ptrFieldAccess=\"custom\"\n"
+    "        fieldHeader=\"OSGDrawTask.h\"\n"
+    "        typeHeader=\"OSGDrawTask.h\"\n"
+    "        fieldFlags=\"FCustomAccess, FClusterLocal\"\n"
+    "        >\n"
     "    </Field>\n"
     "    \n"
     "</FieldContainer>\n",
-    "\\ingroup GrpSystemWindow\n"
-    "\n"
     "Window is the base class for all window management classes.  See \\ref\n"
     "PageSystemWindowWindow for a description.\n"
     "\n"
@@ -980,58 +976,72 @@ void WindowBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (WidthFieldMask & whichField))
     {
+        editSField(WidthFieldMask);
         _sfWidth.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (HeightFieldMask & whichField))
     {
+        editSField(HeightFieldMask);
         _sfHeight.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (PortFieldMask & whichField))
     {
+        editMField(PortFieldMask, _mfPort);
         _mfPort.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GlObjectEventCounterFieldMask & whichField))
     {
+        editSField(GlObjectEventCounterFieldMask);
         _sfGlObjectEventCounter.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GlObjectLastRefreshFieldMask & whichField))
     {
+        editMField(GlObjectLastRefreshFieldMask, _mfGlObjectLastRefresh);
         _mfGlObjectLastRefresh.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GlObjectLastReinitializeFieldMask & whichField))
     {
+        editMField(GlObjectLastReinitializeFieldMask, _mfGlObjectLastReinitialize);
         _mfGlObjectLastReinitialize.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (DrawerIdFieldMask & whichField))
     {
+        editSField(DrawerIdFieldMask);
         _sfDrawerId.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (RequestMajorFieldMask & whichField))
     {
+        editSField(RequestMajorFieldMask);
         _sfRequestMajor.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (RequestMinorFieldMask & whichField))
     {
+        editSField(RequestMinorFieldMask);
         _sfRequestMinor.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ContextFlagsFieldMask & whichField))
     {
+        editSField(ContextFlagsFieldMask);
         _sfContextFlags.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (RenderOptionsFieldMask & whichField))
     {
+        editSField(RenderOptionsFieldMask);
         _sfRenderOptions.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (DrawModeFieldMask & whichField))
     {
+        editSField(DrawModeFieldMask);
         _sfDrawMode.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (RendererInfoFieldMask & whichField))
     {
+        editSField(RendererInfoFieldMask);
         _sfRendererInfo.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (DrawTasksFieldMask & whichField))
     {
+        editMField(DrawTasksFieldMask, _mfDrawTasks);
         _mfDrawTasks.copyFromBin(pMem);
     }
 }
@@ -1115,8 +1125,15 @@ bool WindowBase::unlinkChild(
                 return true;
             }
 
-            FWARNING(("WindowBase::unlinkParent: Child <-> "
-                      "Parent link inconsistent.\n"));
+            SWARNING << "Parent (["        << this
+                     << "] id ["           << this->getId()
+                     << "] type ["         << this->getType().getCName()
+                     << "] childFieldId [" << childFieldId
+                     << "]) - Child (["    << pChild
+                     << "] id ["           << pChild->getId()
+                     << "] type ["         << pChild->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

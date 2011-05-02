@@ -62,7 +62,7 @@
 #include "OSGCocoaWindowBase.h"
 #include "OSGCocoaWindow.h"
 
-#include "boost/bind.hpp"
+#include <boost/bind.hpp>
 
 #ifdef WIN32 // turn off 'this' : used in base member initializer list warning
 #pragma warning(disable:4355)
@@ -79,13 +79,35 @@ OSG_BEGIN_NAMESPACE
  */
 
 /***************************************************************************\
- *                         Field Description                               *
+ *                        Field Documentation                              *
 \***************************************************************************/
 
 /*! \var NSOpenGLContextP CocoaWindowBase::_sfContext
     
 */
 
+
+/***************************************************************************\
+ *                      FieldType/FieldTrait Instantiation                 *
+\***************************************************************************/
+
+#if !defined(OSG_DO_DOC) || defined(OSG_DOC_DEV)
+DataType FieldTraits<CocoaWindow *>::_type("CocoaWindowPtr", "WindowPtr");
+#endif
+
+OSG_FIELDTRAITS_GETTYPE(CocoaWindow *)
+
+OSG_EXPORT_PTR_SFIELD_FULL(PointerSField,
+                           CocoaWindow *,
+                           0);
+
+OSG_EXPORT_PTR_MFIELD_FULL(PointerMField,
+                           CocoaWindow *,
+                           0);
+
+/***************************************************************************\
+ *                         Field Description                               *
+\***************************************************************************/
 
 void CocoaWindowBase::classDescInserter(TypeObject &oType)
 {
@@ -120,25 +142,26 @@ CocoaWindowBase::TypeObject CocoaWindowBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "\tname=\"CocoaWindow\"\n"
-    "\tparent=\"Window\"\n"
-    "\tlibrary=\"WindowCocoa\"\n"
-    "\tpointerfieldtypes=\"both\"\n"
-    "\tstructure=\"concrete\"\n"
-    "\tsystemcomponent=\"true\"\n"
-    "\tparentsystemcomponent=\"true\"\n"
-    ">\n"
-    "The class for MacOS X Cocoa windows.\n"
-    "\t<Field\n"
-    "\t\tname=\"context\"\n"
-    "\t\ttype=\"NSOpenGLContextP\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\tdefaultValue=\"0\"\n"
-    "\t\theader=\"OSGCocoaWindowDataFields.h\"\n"
-    "\t\taccess=\"public\"\n"
-    "\t>\n"
-    "\t</Field>\n"
+    "   name=\"CocoaWindow\"\n"
+    "   parent=\"Window\"\n"
+    "   library=\"WindowCocoa\"\n"
+    "   pointerfieldtypes=\"both\"\n"
+    "   structure=\"concrete\"\n"
+    "   systemcomponent=\"true\"\n"
+    "   parentsystemcomponent=\"true\"\n"
+    "   docGroupBase=\"GrpWindowCocao\"\n"
+    "   >\n"
+    "  The class for MacOS X Cocoa windows.\n"
+    "  <Field\n"
+    "\t name=\"context\"\n"
+    "\t type=\"NSOpenGLContextP\"\n"
+    "\t cardinality=\"single\"\n"
+    "\t visibility=\"internal\"\n"
+    "\t defaultValue=\"0\"\n"
+    "\t fieldHeader=\"OSGCocoaWindowDataFields.h\"\n"
+    "\t access=\"public\"\n"
+    "\t >\n"
+    "  </Field>\n"
     "</FieldContainer>\n",
     "The class for MacOS X Cocoa windows.\n"
     );
@@ -212,6 +235,7 @@ void CocoaWindowBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (ContextFieldMask & whichField))
     {
+        editSField(ContextFieldMask);
         _sfContext.copyFromBin(pMem);
     }
 }
@@ -422,19 +446,5 @@ void CocoaWindowBase::resolveLinks(void)
 
 }
 
-
-#if !defined(OSG_DO_DOC) || defined(OSG_DOC_DEV)
-DataType FieldTraits<CocoaWindow *>::_type("CocoaWindowPtr", "WindowPtr");
-#endif
-
-OSG_FIELDTRAITS_GETTYPE(CocoaWindow *)
-
-OSG_EXPORT_PTR_SFIELD_FULL(PointerSField,
-                           CocoaWindow *,
-                           0);
-
-OSG_EXPORT_PTR_MFIELD_FULL(PointerMField,
-                           CocoaWindow *,
-                           0);
 
 OSG_END_NAMESPACE

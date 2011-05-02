@@ -38,6 +38,7 @@
 
 OSG_BEGIN_NAMESPACE
 
+#ifndef OSG_DOXYGEN_REC_MACRO_PROBS
 template <class AttachmentDescT> inline
 typename DynFieldAttachment<AttachmentDescT>::TypeObject &
     DynFieldAttachment<AttachmentDescT>::getType(void)
@@ -51,6 +52,7 @@ const typename DynFieldAttachment<AttachmentDescT>::TypeObject &
 {
     return _localType;
 }
+#endif
 
 /*-------------------------------------------------------------------------*/
 /*                            Field Access                                 */
@@ -241,7 +243,9 @@ FieldContainer *DynFieldAttachment<AttachmentDescT>::emptyCopy(void)
 template <class AttachmentDescT> inline
 FieldContainer *DynFieldAttachment<AttachmentDescT>::clone(void)
 {
-    ObjCPtr returnValue = DynFieldAttachment<AttachmentDescT>::createEmpty();
+    ObjCPtr returnValue = 
+        DynFieldAttachment<AttachmentDescT>::createEmptyLocal(
+            ~this->getFieldFlags()->_bNamespaceMask);
 
     for(UInt32 i  = Inherited::NextFieldId;
                i <= _localType.getNumFieldDescs();

@@ -129,6 +129,14 @@ DataType FieldTraits<TimeSensor *>::_type("TimeSensorPtr", "NodeCorePtr");
 
 OSG_FIELDTRAITS_GETTYPE(TimeSensor *)
 
+OSG_EXPORT_PTR_SFIELD_FULL(PointerSField,
+                           TimeSensor *,
+                           0);
+
+OSG_EXPORT_PTR_MFIELD_FULL(PointerMField,
+                           TimeSensor *,
+                           0);
+
 /***************************************************************************\
  *                         Field Description                               *
 \***************************************************************************/
@@ -146,7 +154,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         EnabledFieldId, EnabledFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleEnabled),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleEnabled));
 
@@ -158,7 +166,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         IsActiveFieldId, IsActiveFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleIsActive),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleIsActive));
 
@@ -170,7 +178,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         LoopFieldId, LoopFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleLoop),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleLoop));
 
@@ -182,7 +190,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         FractionFieldId, FractionFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleFraction),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleFraction));
 
@@ -194,7 +202,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         StartTimeFieldId, StartTimeFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleStartTime),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleStartTime));
 
@@ -206,7 +214,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         StopTimeFieldId, StopTimeFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleStopTime),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleStopTime));
 
@@ -218,7 +226,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         CycleTimeFieldId, CycleTimeFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleCycleTime),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleCycleTime));
 
@@ -230,7 +238,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         TimeFieldId, TimeFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleTime),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleTime));
 
@@ -242,7 +250,7 @@ void TimeSensorBase::classDescInserter(TypeObject &oType)
         "",
         CycleIntervalFieldId, CycleIntervalFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&TimeSensor::editHandleCycleInterval),
         static_cast<FieldGetMethodSig >(&TimeSensor::getHandleCycleInterval));
 
@@ -264,110 +272,111 @@ TimeSensorBase::TypeObject TimeSensorBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "    name=\"TimeSensor\"\n"
-    "    parent=\"NodeCore\"\n"
-    "    mixinparent=\"NodeCoreSensorParent\"\n"
-    "    library=\"Dynamics\"\n"
-    "    pointerfieldtypes=\"none\"\n"
-    "    structure=\"concrete\"\n"
-    "    systemcomponent=\"true\"\n"
-    "    parentsystemcomponent=\"true\"\n"
-    "    decoratable=\"false\"\n"
-    "    useLocalIncludes=\"false\"\n"
-    "    isNodeCore=\"true\"\n"
-    "    isBundle=\"false\"\n"
-    "    parentFields=\"none\"\n"
-    ">\n"
-    "\t<Field\n"
-    "\t\tname=\"enabled\"\n"
-    "\t\ttype=\"bool\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"true\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    " \t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"isActive\"\n"
-    "\t\ttype=\"bool\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"false\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"loop\"\n"
-    "\t\ttype=\"bool\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"false\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"fraction\"\n"
-    "\t\ttype=\"Real32\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"0.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"startTime\"\n"
-    "\t\ttype=\"Time\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"0.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"stopTime\"\n"
-    "\t\ttype=\"Time\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"0.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"cycleTime\"\n"
-    "\t\ttype=\"Time\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"0.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"time\"\n"
-    "\t\ttype=\"Time\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"0.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
-    "\t<Field\n"
-    "\t\tname=\"cycleInterval\"\n"
-    "\t\ttype=\"Time\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"public\"\n"
-    "        defaultValue=\"1.0\"\n"
-    "        fieldFlags=\"FThreadLocal\"\n"
-    "\t>\n"
-    "\t</Field>\n"
+    "   name=\"TimeSensor\"\n"
+    "   parent=\"NodeCore\"\n"
+    "   mixinparent=\"NodeCoreSensorParent\"\n"
+    "   library=\"Dynamics\"\n"
+    "   pointerfieldtypes=\"both\"\n"
+    "   structure=\"concrete\"\n"
+    "   systemcomponent=\"true\"\n"
+    "   parentsystemcomponent=\"true\"\n"
+    "   decoratable=\"false\"\n"
+    "   useLocalIncludes=\"false\"\n"
+    "   isNodeCore=\"true\"\n"
+    "   isBundle=\"false\"\n"
+    "   parentFields=\"none\"\n"
+    "   docGroupBase=\"GrpDynamicsAnimation\"\n"
+    "   >\n"
+    "  <Field\n"
+    "     name=\"enabled\"\n"
+    "     type=\"bool\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"true\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"isActive\"\n"
+    "     type=\"bool\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"false\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"loop\"\n"
+    "     type=\"bool\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"false\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"fraction\"\n"
+    "     type=\"Real32\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"0.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"startTime\"\n"
+    "     type=\"Time\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"0.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"stopTime\"\n"
+    "     type=\"Time\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"0.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"cycleTime\"\n"
+    "     type=\"Time\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"0.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"time\"\n"
+    "     type=\"Time\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"0.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
+    "  <Field\n"
+    "     name=\"cycleInterval\"\n"
+    "     type=\"Time\"\n"
+    "     cardinality=\"single\"\n"
+    "     visibility=\"internal\"\n"
+    "     access=\"public\"\n"
+    "     defaultValue=\"1.0\"\n"
+    "     fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "     >\n"
+    "  </Field>\n"
     "</FieldContainer>\n",
     ""
     );
@@ -609,38 +618,47 @@ void TimeSensorBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (EnabledFieldMask & whichField))
     {
+        editSField(EnabledFieldMask);
         _sfEnabled.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (IsActiveFieldMask & whichField))
     {
+        editSField(IsActiveFieldMask);
         _sfIsActive.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (LoopFieldMask & whichField))
     {
+        editSField(LoopFieldMask);
         _sfLoop.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (FractionFieldMask & whichField))
     {
+        editSField(FractionFieldMask);
         _sfFraction.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (StartTimeFieldMask & whichField))
     {
+        editSField(StartTimeFieldMask);
         _sfStartTime.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (StopTimeFieldMask & whichField))
     {
+        editSField(StopTimeFieldMask);
         _sfStopTime.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (CycleTimeFieldMask & whichField))
     {
+        editSField(CycleTimeFieldMask);
         _sfCycleTime.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (TimeFieldMask & whichField))
     {
+        editSField(TimeFieldMask);
         _sfTime.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (CycleIntervalFieldMask & whichField))
     {
+        editSField(CycleIntervalFieldMask);
         _sfCycleInterval.copyFromBin(pMem);
     }
 }

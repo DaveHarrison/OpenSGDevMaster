@@ -42,17 +42,19 @@
 
 #include "OSGColladaGeometry.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaGlobal.h"
-#include "OSGColladaSource.h"
 #include "OSGColladaInstanceGeometry.h"
 #include "OSGColladaInstanceEffect.h"
+#include "OSGColladaNode.h"
+#include "OSGColladaSource.h"
 #include "OSGGroup.h"
 #include "OSGTypedGeoVectorProperty.h"
 #include "OSGTypedGeoIntegralProperty.h"
 #include "OSGNameAttachment.h"
+#include "OSGPrimeMaterial.h"
 
 #include <dom/domGeometry.h>
 #include <dom/domMesh.h>
@@ -67,9 +69,60 @@
 
 OSG_BEGIN_NAMESPACE
 
+ColladaInstInfoTransitPtr
+ColladaGeometry::ColladaGeometryInstInfo::create(
+    ColladaNode *colInstParent, ColladaInstanceGeometry *colInst,
+    Node        *parentN                                         )
+{
+    OSG_ASSERT(colInstParent != NULL);
+    OSG_ASSERT(colInst       != NULL);
+
+    return ColladaInstInfoTransitPtr(
+        new ColladaGeometryInstInfo(colInstParent, colInst, parentN));
+}
+
+void
+ColladaGeometry::ColladaGeometryInstInfo::process(void)
+{
+    Node *geoInstN = dynamic_cast<Node *>(
+        getColInst()->getTargetElem()->createInstance(this));
+
+    getParentNode()->addChild(geoInstN);
+}
+
+ColladaGeometry::ColladaGeometryInstInfo::ColladaGeometryInstInfo(
+    ColladaNode *colInstParent, ColladaInstanceGeometry *colInst,
+    Node        *parentN                                         )
+
+    : Inherited(colInstParent, colInst)
+    , _parentN (parentN               )
+{
+}
+
+ColladaGeometry::ColladaGeometryInstInfo::~ColladaGeometryInstInfo(void)
+{
+}
+
+/*---------------------------------------------------------------------------*/
+
+ColladaGeometry::PropInfo::PropInfo(void)
+    : _semantic()
+    , _set     ()
+    , _prop    (NULL)
+{
+}
+
+ColladaGeometry::PropInfo::PropInfo(const PropInfo &source)
+    : _semantic(source._semantic)
+    , _set     (source._set)
+    , _prop    (source._prop)
+{
+}
+
+/*---------------------------------------------------------------------------*/
+
 ColladaElementRegistrationHelper ColladaGeometry::_regHelper(
     &ColladaGeometry::create, "geometry");
-
 
 ColladaElementTransitPtr
 ColladaGeometry::create(daeElement *elem, ColladaGlobal *global)
@@ -78,12 +131,13 @@ ColladaGeometry::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaGeometry::read(void)
+ColladaGeometry::read(ColladaElement *colElemParent)
 {
-    OSG_COLLADA_LOG(("ColladaGeometry::read\n"));
+    domGeometryRef geometry = getDOMElementAs<domGeometry>();
+    domMeshRef     mesh     = geometry->getMesh();
 
-    domGeometryRef geo  = getDOMElementAs<domGeometry>();
-    domMeshRef     mesh = geo->getMesh();
+    OSG_COLLADA_LOG(("ColladaGeometry::read id [%s]\n",
+                     geometry->getId()));
 
     if(mesh == NULL)
     {
@@ -95,19 +149,16 @@ ColladaGeometry::read(void)
 }
 
 Node *
-ColladaGeometry::createInstance(ColladaInstanceElement *colInstElem)
+ColladaGeometry::createInstance(ColladaInstInfo *colInstInfo)
 {
-    OSG_COLLADA_LOG(("ColladaGeometry::createInstance\n"));
-
     typedef ColladaInstanceGeometry::MaterialMap        MaterialMap;
     typedef ColladaInstanceGeometry::MaterialMapConstIt MaterialMapConstIt;
 
-    domGeometryRef                geometry   = getDOMElementAs<domGeometry>();
-    ColladaInstanceGeometryRefPtr colInstGeo =
-        dynamic_cast<ColladaInstanceGeometry *>(colInstElem);
+    domGeometryRef geometry = getDOMElementAs<domGeometry>();
+    NodeUnrecPtr   groupN   = makeCoredNode<Group>();
 
-    const MaterialMap &matMap = colInstGeo->getMaterialMap();
-    NodeUnrecPtr       groupN = makeCoredNode<Group>();
+    OSG_COLLADA_LOG(("ColladaGeometry::createInstance id [%s]\n",
+                     geometry->getId()));
 
     if(getGlobal()->getOptions()->getCreateNameAttachments() == true &&
        geometry->getName()                                   != NULL   )
@@ -115,9 +166,14 @@ ColladaGeometry::createInstance(ColladaInstanceElement *colInstElem)
         setName(groupN, geometry->getName());
     }
 
+    ColladaInstanceGeometryRefPtr  colInstGeo =
+        dynamic_cast<ColladaInstanceGeometry *>(colInstInfo->getColInst());
+    const MaterialMap             &matMap     =
+        colInstGeo->getMaterialMap();
+
     // iterate over all parts of geometry
-    GeoStoreIt         gsIt   = _geoStore.begin();
-    GeoStoreIt         gsEnd  = _geoStore.end  ();
+    GeoStoreIt gsIt   = _geoStore.begin();
+    GeoStoreIt gsEnd  = _geoStore.end  ();
 
     for(; gsIt != gsEnd; ++gsIt)
     {
@@ -168,7 +224,7 @@ ColladaGeometry::createInstance(ColladaInstanceElement *colInstElem)
 
             editInstStore().push_back(geo);
         }
-        
+
         NodeUnrecPtr geoN = makeNodeFor(geo);
 
         groupN->addChild(geoN);
@@ -194,7 +250,7 @@ ColladaGeometry::~ColladaGeometry(void)
 void
 ColladaGeometry::readMesh(domMesh *mesh)
 {
-    readSources(mesh);
+    readSources(mesh->getSource_array());
 
     const domLines_Array &linesArray = mesh->getLines_array();
 
@@ -216,7 +272,6 @@ ColladaGeometry::readMesh(domMesh *mesh)
     {
         readPolygons(mesh, polygonsArray[i]);
     }
-
     const domPolylist_Array &polyListArray = mesh->getPolylist_array();
 
     for(UInt32 i = 0; i < polyListArray.getCount(); ++i)
@@ -225,7 +280,7 @@ ColladaGeometry::readMesh(domMesh *mesh)
     }
 
     const domTriangles_Array &triArray = mesh->getTriangles_array();
-    
+
     for(UInt32 i = 0; i < triArray.getCount(); ++i)
     {
         readTriangles(mesh, triArray[i]);
@@ -247,10 +302,8 @@ ColladaGeometry::readMesh(domMesh *mesh)
 }
 
 void
-ColladaGeometry::readSources(domMesh *mesh)
+ColladaGeometry::readSources(const domSource_Array &sources)
 {
-    const domSource_Array &sources = mesh->getSource_array();
-
     for(UInt32 i = 0; i < sources.getCount(); ++i)
     {
         ColladaSourceRefPtr colSource =
@@ -261,7 +314,7 @@ ColladaGeometry::readSources(domMesh *mesh)
             colSource = dynamic_pointer_cast<ColladaSource>(
                 ColladaElementFactory::the()->create(sources[i], getGlobal()));
 
-            colSource->read();
+            colSource->read(this);
         }
 
         _sourceMap.insert(
@@ -377,7 +430,7 @@ ColladaGeometry::readLineStrips(domMesh *mesh, domLinestrips *lineStrips)
     {
         SWARNING << "ColladaGeometry::readLineStrips: Empty <linestrips> "
                  << "with material ["
-                 << (lineStrips->getMaterial() != NULL ? 
+                 << (lineStrips->getMaterial() != NULL ?
                      lineStrips->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -485,7 +538,7 @@ ColladaGeometry::readPolygons(domMesh *mesh, domPolygons *polygons)
     {
         SWARNING << "ColladaGeometry::readPolygons: Empty <polygons> "
                  << "with material ["
-                 << (polygons->getMaterial() != NULL ? 
+                 << (polygons->getMaterial() != NULL ?
                      polygons->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -587,7 +640,7 @@ ColladaGeometry::readPolyList(domMesh *mesh, domPolylist *polyList)
     {
         SWARNING << "ColladaGeometry::readPolyList: Empty <polylist> "
                  << "with material ["
-                 << (polyList->getMaterial() != NULL ? 
+                 << (polyList->getMaterial() != NULL ?
                      polyList->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -639,7 +692,7 @@ ColladaGeometry::readTriangles(domMesh *mesh, domTriangles *triangles)
     {
         SWARNING << "ColladaGeometry::readTriangles: Empty <triangles> "
                  << "with material ["
-                 << (triangles->getMaterial() != NULL ? 
+                 << (triangles->getMaterial() != NULL ?
                      triangles->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -705,7 +758,7 @@ ColladaGeometry::readTriFans(domMesh *mesh, domTrifans *triFans)
     {
         SWARNING << "ColladaGeometry::readTriFans: Empty <trifans> "
                  << "with material ["
-                 << (triFans->getMaterial() != NULL ? 
+                 << (triFans->getMaterial() != NULL ?
                      triFans->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -771,7 +824,7 @@ ColladaGeometry::readTriStrips(domMesh *mesh, domTristrips *triStrips)
     {
         SWARNING << "ColladaGeometry::readTriStrips: Empty <tristrips> "
                  << "with material ["
-                 << (triStrips->getMaterial() != NULL ? 
+                 << (triStrips->getMaterial() != NULL ?
                      triStrips->getMaterial() : "")
                  << "]." << std::endl;
 
@@ -783,7 +836,7 @@ UInt32
 ColladaGeometry::mapSemantic(
     const std::string &semantic, UInt32 set, UInt32 geoIdx)
 {
-    UInt32 propIdx = Geometry::LastIndex;
+    UInt32 propIdx = Geometry::MaxAttribs;
 
     if(semantic == "POSITION")
     {
@@ -808,8 +861,8 @@ ColladaGeometry::mapSemantic(
     }
     else
     {
-        SWARNING << "ColladaGeometry::mapSemantic: Unknown semantic ["
-                 << semantic << "] set [" << set << "]" << std::endl;
+        OSG_COLLADA_LOG(("ColladaGeometry::mapSemantic: Unknown semantic [%s] "
+                         "set [%d]\n", semantic.c_str(), set));
     }
 
     OSG_COLLADA_LOG(("ColladaGeometry::mapSemantic: semantic [%s] "
@@ -833,7 +886,7 @@ ColladaGeometry::setupProperty(
         NULL                                                             );
 
     // set index for the property
-    _geoStore[geoIdx]._indexStore[propIdx]          = idxProp;
+    _geoStore[geoIdx]._indexStore[propIdx] = idxProp;
 
     // get property from source
     SourceMapConstIt   smIt = _sourceMap.find(sourceId);
@@ -841,12 +894,12 @@ ColladaGeometry::setupProperty(
 
     if(smIt != _sourceMap.end())
     {
-        prop = smIt->second->getProperty(semantic, set);
+        prop = smIt->second->getProperty(semantic);
     }
     else
     {
         SFATAL << "ColladaGeometry::setupProperty: "
-               << "No <source> found with id [" << sourceId << "]."
+               << "No <source> with id [" << sourceId << "] found."
                << std::endl;
     }
 
@@ -863,6 +916,13 @@ ColladaGeometry::setupGeometry(const domInputLocal_Array       &vertInputs,
                                IndexStore                      &idxStore   )
 {
     OSG_COLLADA_LOG(("ColladaGeometry::setupGeometry\n"));
+
+    typedef std::vector<UInt32>             UnhandledStore;
+    typedef UnhandledStore::const_iterator  UnhandledStoreConstIt;
+
+    Int32          vertInputIndex       = -1;  // <input> with sem "VERTEX"
+    UnhandledStore unhandledVertInputs;
+    UnhandledStore unhandledInputs;
 
     UInt32 geoIdx = _geoStore.size();
     _geoStore.push_back(GeoInfo());
@@ -891,7 +951,9 @@ ColladaGeometry::setupGeometry(const domInputLocal_Array       &vertInputs,
         if(semantic == "VERTEX")
         {
             // handle <input> tag with semantic "VERTEX"
-            // by processing vertInputs
+            // by processing vertInputs, i.e. the <vertices> tag
+
+            vertInputIndex = i;
 
             // all vertInputs use the same index - with the offset from the
             // <input> with semantic == VERTEX
@@ -918,8 +980,15 @@ ColladaGeometry::setupGeometry(const domInputLocal_Array       &vertInputs,
 
                 UInt32 propIdx = mapSemantic(semantic, 0, geoIdx);
 
-                setupProperty(geoIdx, propIdx, semantic, set, sourceId,
-                              idxStore[offset]                         );
+                if(propIdx == Geometry::MaxAttribs)
+                {
+                    unhandledVertInputs.push_back(j);
+                }
+                else
+                {
+                    setupProperty(geoIdx, propIdx, semantic, set, sourceId,
+                                  idxStore[offset]                         );
+                }
             }
         }
         else
@@ -939,9 +1008,65 @@ ColladaGeometry::setupGeometry(const domInputLocal_Array       &vertInputs,
 
             UInt32 propIdx = mapSemantic(semantic, set, geoIdx);
 
-            setupProperty(geoIdx, propIdx, semantic, set, sourceId,
-                          idxStore[offset]                         );
+            if(propIdx == Geometry::MaxAttribs)
+            {
+                unhandledInputs.push_back(i);
+            }
+            else
+            {
+                setupProperty(geoIdx, propIdx, semantic, set, sourceId,
+                              idxStore[offset]                         );
+            }
         }
+    }
+
+    // some <inputs> could not be handled above because their
+    // semantic was not recognized.
+    // after everything else is set put them into free attribute
+    // slots, starting at Geometry::TexCoordsIndex
+
+    UnhandledStoreConstIt uhIt  = unhandledVertInputs.begin();
+    UnhandledStoreConstIt uhEnd = unhandledVertInputs.end  ();
+
+    for(; uhIt != uhEnd; ++uhIt)
+    {
+        std::string semantic = vertInputs[*uhIt         ]->getSemantic();
+        UInt32      set      = inputs    [vertInputIndex]->getSet     ();
+        UInt32      offset   = inputs    [vertInputIndex]->getOffset  ();
+        std::string sourceId = vertInputs[*uhIt         ]->getSource  ().id();
+
+        UInt32 propIdx = findFreePropertyIndex(geoIdx);
+
+        OSG_COLLADA_LOG(("ColladaGeometry::setupGeometry: unhandled vertex "
+                         " <input> [%d] semantic [%s] set [%d] offset [%d] - "
+                         "source [%s] mapped to propIdx [%d]\n",
+                         *uhIt, semantic.c_str(), set, offset, sourceId.c_str(),
+                         propIdx));
+
+        setupProperty(geoIdx, propIdx, semantic, set, sourceId,
+                      idxStore[offset]                         );
+    }
+
+    uhIt  = unhandledInputs.begin();
+    uhEnd = unhandledInputs.end  ();
+
+    for(; uhIt != uhEnd; ++uhIt)
+    {
+        std::string semantic = inputs[*uhIt]->getSemantic();
+        UInt32      set      = inputs[*uhIt]->getSet     ();
+        UInt32      offset   = inputs[*uhIt]->getOffset  ();
+        std::string sourceId = inputs[*uhIt]->getSource  ().id();
+
+        UInt32 propIdx = findFreePropertyIndex(geoIdx);
+
+        OSG_COLLADA_LOG(("ColladaGeometry::setupGeometry: unhandled <input> "
+                         "[%d] semantic [%s] set [%d] offset [%d] - "
+                         "source [%s] mapped to propIdx [%d]\n",
+                         *uhIt, semantic.c_str(), set, offset, sourceId.c_str(),
+                         propIdx));
+
+        setupProperty(geoIdx, propIdx, semantic, set, sourceId,
+                      idxStore[offset]                         );
     }
 
 #ifdef OSG_DEBUG
@@ -980,15 +1105,25 @@ ColladaGeometry::handleBindMaterial(
 
     if(mmIt != matMap.end())
     {
-        colInstMat    = mmIt      ->second;
-        material      = colInstMat->process          (NULL);
-        colInstEffect = colInstMat->getInstanceEffect(    );
+        colInstMat = mmIt->second;
+
+        OSG_ASSERT(colInstMat                  != NULL);
+        OSG_ASSERT(colInstMat->getTargetElem() != NULL);
+
+        ColladaInstInfoRefPtr colInstInfo =
+            ColladaMaterial::ColladaMaterialInstInfo::create(this, colInstMat);
+
+        material      =
+            colInstMat->getTargetElem()->createInstance(colInstInfo);
+        colInstEffect = colInstMat->getInstanceEffect();
     }
     else
     {
         SWARNING << "ColladaGeometry::handleBindMaterial: No material found "
                  << "for symbol [" << geoInfo._matSymbol << "]."
                  << std::endl;
+
+        geo->setMaterial(getDefaultMaterial());
         return;
     }
 
@@ -1023,6 +1158,19 @@ ColladaGeometry::handleBindMaterial(
         while(bi != NULL || bvi != NULL)
         {
             UInt32 mappedProp = i;
+
+            if(bi != NULL && bvi != NULL)
+            {
+                // is it a problem if there is a <bind> AND a
+                // <bind_vertex_input> for the same property ??
+
+                SWARNING << "ColladaGeometry::handleBindMaterial: "
+                         << "Found <bind> AND <bind_vertex_input> for "
+                         << "semantic [" << bi->semantic
+                         << "] target/inSemantic [" << bi->target << "/"
+                         << bvi->inSemantic << "] inSet [" << bvi->inSet
+                         << "]" << std::endl;
+            }
 
             if(bi != NULL)
             {
@@ -1060,7 +1208,6 @@ ColladaGeometry::handleBindMaterial(
 
                     geo->setProperty( psIt->_prop, mappedProp);
                     geo->setIndex   (*isIt,        mappedProp);
-                    
                     handledProperty = true;
                 }
                 else
@@ -1091,8 +1238,9 @@ ColladaGeometry::handleBindMaterial(
         if(handledProperty == false)
         {
             OSG_COLLADA_LOG(("ColladaGeometry::handleBindMaterial: "
-                             "Setting property [%d] without "
-                             "<bind>/<bind_vertex_input> mapping.\n", i));
+                             "Setting property [%d] (semantic [%s] set [%d]) "
+                             "without <bind>/<bind_vertex_input> mapping.\n",
+                             i, psIt->_semantic.c_str(), psIt->_set));
 
             geo->setProperty( psIt->_prop, i);
             geo->setIndex   (*isIt,        i);
@@ -1108,12 +1256,14 @@ ColladaGeometry::handleBindMaterial(
         SWARNING << "ColladaGeometry::handleBindMaterial: No material created "
                  << "for symbol [" << geoInfo._matSymbol << "]."
                  << std::endl;
+
+        geo->setMaterial(getDefaultMaterial());
     }
 }
 
-/*! Returns a <bind> (actually a BindInfo built from a <bind>) that has
-    the given \a semantic. The search starts at the given \a offset to
-    allow multiple <bind> with the same semantic to be found.
+/*! Returns a &lt;bind&gt; (actually a BindInfo built from a &lt;bind&gt;)
+    that has the given \a semantic. The search starts at the given \a offset to
+    allow multiple &lt;bind&gt; with the same semantic to be found.
  */
 const ColladaGeometry::BindInfo *
 ColladaGeometry::findBind(
@@ -1134,10 +1284,11 @@ ColladaGeometry::findBind(
     return retVal;
 }
 
-/*! Returns a <bind_vertex_input> (actually a BindVertexInfo built from
-    a <bind_vertex_input>) that has the given \a inSemantic and \a inSet.
+/*! Returns a &lt;bind_vertex_input&gt; (actually a BindVertexInfo built from
+    a &lt;bind_vertex_input&gt;) that has the given \a inSemantic and \a inSet.
     The search starts at the given \a offset to allow
-    multiple <bind_vertex_input> with the same inSemantic/inSet to be found.
+    multiple &lt;bind_vertex_input&gt; with the same inSemantic/inSet to be
+    found. 
  */
 const ColladaGeometry::BindVertexInfo *
 ColladaGeometry::findBindVertex(
@@ -1153,6 +1304,25 @@ ColladaGeometry::findBindVertex(
         {
             retVal = &store[i];
             offset = i;
+            break;
+        }
+    }
+
+    return retVal;
+}
+UInt16
+ColladaGeometry::findFreePropertyIndex(UInt32 geoIdx)
+{
+    // find an unused property
+    UInt16 retVal = osgMax<UInt16>(_geoStore[geoIdx]._propStore.size(),
+                                   Geometry::TexCoordsIndex            );
+
+    for(UInt16 i = Geometry::TexCoordsIndex;
+        i < _geoStore[geoIdx]._propStore.size(); ++i)
+    {
+        if(_geoStore[geoIdx]._propStore[i]._prop == NULL)
+        {
+            retVal = i;
             break;
         }
     }

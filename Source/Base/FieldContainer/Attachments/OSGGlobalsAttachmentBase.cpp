@@ -167,7 +167,7 @@ void GlobalsAttachmentBase::classDescInserter(TypeObject &oType)
         "elements",
         "global elements store inside the attachment\n",
         ElementsFieldId, ElementsFieldMask,
-        true,
+        false,
         (Field::MFDefaultFlags | Field::FStdAccess),
         static_cast<FieldEditMethodSig>(&GlobalsAttachment::editHandleElements),
         static_cast<FieldGetMethodSig >(&GlobalsAttachment::getHandleElements));
@@ -201,6 +201,7 @@ GlobalsAttachmentBase::TypeObject GlobalsAttachmentBase::_type(
     "   systemcomponent=\"true\"\n"
     "   parentsystemcomponent=\"true\"\n"
     "   isNodeCore=\"false\"\n"
+    "   docGroupBase=\"GrpBaseFieldContainer\"\n"
     "   >\n"
     "  attached to the root node by the loader infrastructure if the file\n"
     "  contains elements outside the main graph.\n"
@@ -209,7 +210,7 @@ GlobalsAttachmentBase::TypeObject GlobalsAttachmentBase::_type(
     "     category=\"pointer\"\n"
     "     type=\"FieldContainer\"\n"
     "     cardinality=\"multi\"\n"
-    "     visibility=\"internal\"\n"
+    "     visibility=\"external\"\n"
     "     >\n"
     "    global elements store inside the attachment\n"
     "  </Field>\n"
@@ -340,6 +341,7 @@ void GlobalsAttachmentBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (ElementsFieldMask & whichField))
     {
+        editMField(ElementsFieldMask, _mfElements);
         _mfElements.copyFromBin(pMem);
     }
 }

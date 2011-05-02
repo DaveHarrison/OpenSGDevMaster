@@ -203,6 +203,7 @@ NodeCoreBase::TypeObject NodeCoreBase::_type(
     "   systemcomponent=\"true\"\n"
     "   parentsystemcomponent=\"true\"\n"
     "   isNodeCore=\"true\"\n"
+    "   docGroupBase=\"GrpBaseFieldContainer\"\n"
     "   >\n"
     "  Abstract base type for all cores, which define the behavior (semantics) of\n"
     "  the node(s) they belong to.\n"
@@ -280,6 +281,7 @@ void NodeCoreBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (ParentsFieldMask & whichField))
     {
+        editMField(ParentsFieldMask, _mfParents);
         _mfParents.copyFromBin(pMem);
     }
 }
@@ -324,7 +326,7 @@ bool NodeCoreBase::linkParent(
         {
             editMField(ParentsFieldMask, _mfParents);
 
-            _mfParents.push_back(pParent, childFieldId);
+            _mfParents.push_back(pTypedParent, childFieldId);
 
             return true;
         }
@@ -346,7 +348,7 @@ bool NodeCoreBase::unlinkParent(
 
         if(pTypedParent != NULL)
         {
-            Int32 iParentIdx = _mfParents.findIndex(pParent);
+            Int32 iParentIdx = _mfParents.findIndex(pTypedParent);
 
             if(iParentIdx != -1)
             {
@@ -357,8 +359,15 @@ bool NodeCoreBase::unlinkParent(
                 return true;
             }
 
-            FWARNING(("NodeCoreBase::unlinkParent: "
-                      "Child <-> Parent link inconsistent.\n"));
+            SWARNING << "Child (["          << this
+                     << "] id ["            << this->getId()
+                     << "] type ["          << this->getType().getCName()
+                     << "] parentFieldId [" << parentFieldId
+                     << "]) - Parent (["    << pParent
+                     << "] id ["            << pParent->getId()
+                     << "] type ["          << pParent->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

@@ -46,19 +46,29 @@ void FieldContainerFactoryBase::setMapper(ContainerIdMapper *pMapper)
 }
 
 inline
-UInt32 FieldContainerFactoryBase::getNumContainers(void) const
+UInt32 FieldContainerFactoryBase::getNumLiveContainers(void) const
 {
     UInt32 returnValue = 0;
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->acquire();
-#endif
 
-    returnValue = _vContainerStore.size();
+    returnValue = _containerStore.size();
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->release();
-#endif
+
+    return returnValue;
+}
+
+inline
+UInt32 FieldContainerFactoryBase::getNumTotalContainers(void) const
+{
+    UInt32 returnValue = 0;
+
+    _pStoreLock->acquire();
+
+    returnValue = _nextContainerId;
+
+    _pStoreLock->release();
 
     return returnValue;
 }
@@ -69,25 +79,20 @@ FieldContainerFactoryBase::ContainerPtr
 {
     ContainerPtr returnValue = NULL;
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->acquire();
-#endif
 
-    if(uiContainerId < _vContainerStore.size())
+    ContainerStoreConstIt sI = _containerStore.find(uiContainerId);
+
+    if(sI != _containerStore.end())
     {
-        if(_vContainerStore[uiContainerId] != NULL)
-        {
 #ifdef OSG_MT_CPTR_ASPECT
-            returnValue = _vContainerStore[uiContainerId]->getPtr();
+        returnValue = (*sI).second->getPtr();
 #else
-            returnValue = _vContainerStore[uiContainerId];
+        returnValue = (*sI).second;
 #endif
-        }
     }
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->release();
-#endif
 
     return returnValue;
 }
@@ -98,18 +103,16 @@ FieldContainerFactoryBase::ContainerHandlerP
 {
     ContainerHandlerP returnValue = NULL;
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->acquire();
-#endif
 
-    if(uiContainerId < _vContainerStore.size())
+    ContainerStoreConstIt sI = _containerStore.find(uiContainerId);
+
+    if(sI != _containerStore.end())
     {
-        returnValue = _vContainerStore[uiContainerId];
+        returnValue = (*sI).second;
     }
 
-#ifndef OSG_EMBEDDED
     _pStoreLock->release();
-#endif
 
     return returnValue;
 }
@@ -135,36 +138,45 @@ FieldContainerFactoryBase::ContainerPtr
     }
 }
 
-
+/*! Lock the container store to allow iteration over it.
+    \warning This makes it impossible to create new containers,
+             be sure you know what you are doing!
+ */
 inline
-bool FieldContainerFactoryBase::deregisterContainer(const UInt32 uiContainerId)
+void FieldContainerFactoryBase::lockStore(void)
 {
-    bool returnValue = false;
-
-#ifndef OSG_EMBEDDED
     _pStoreLock->acquire();
-#endif
+}
 
-    if(uiContainerId < _vContainerStore.size())
-    {
-        _vContainerStore[uiContainerId] = NULL;
-    }
-#ifdef OSG_DEBUG
-    else
-    {
-        FWARNING(("FieldContainerFactory::unregisterFieldContainer:"
-                  "id %d inconsistent with store size %"PRISize"!\n",
-                uiContainerId,
-                _vContainerStore.size()));
-        returnValue = true;
-    }
-#endif
-
-#ifndef OSG_EMBEDDED
+/*! Unlock the container store.
+    \warning Be sure you know what you are doing!
+ */
+inline
+void FieldContainerFactoryBase::unlockStore(void)
+{
     _pStoreLock->release();
-#endif
+}
 
-    return returnValue;
+/*! Returns a begin iterator over the container storage.
+    The container storage should be locked with lockStore before
+    iterating over it.
+*/
+inline
+FieldContainerFactoryBase::ContainerStoreConstIt
+FieldContainerFactoryBase::beginStore(void) const
+{
+    return _containerStore.begin();
+}
+
+/*! Returns an end iterator over the container storage.
+    The container storage should be locked with lockStore before
+    iterating over it.
+*/
+inline
+FieldContainerFactoryBase::ContainerStoreConstIt
+FieldContainerFactoryBase::endStore(void) const
+{
+    return _containerStore.end();
 }
 
 OSG_END_NAMESPACE

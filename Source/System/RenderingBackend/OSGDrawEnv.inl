@@ -40,6 +40,66 @@
 OSG_BEGIN_NAMESPACE
 
 inline
+void OpenGLState::setProjection(const Matrix &matrix)
+{
+    _mProjection = matrix;
+
+#ifdef OSG_OGL_COREONLY
+    _mModelViewProjection = _mProjection;
+    _mModelViewProjection.mult(_mModelView);
+#endif
+}
+
+inline
+const Matrix &OpenGLState::getProjection(void) const
+{
+    return _mProjection;
+}
+
+
+inline
+void OpenGLState::setModelView(const Matrix &matrix)
+{
+    _mModelView = matrix;
+
+#ifdef OSG_OGL_COREONLY
+    _mModelViewProjection = _mProjection;
+    _mModelViewProjection.mult(_mModelView);
+
+    _mNormalMatrix[0] = matrix[0];
+    _mNormalMatrix[1] = matrix[1];
+    _mNormalMatrix[2] = matrix[2];
+    
+    _mNormalMatrix.invert   ();
+    _mNormalMatrix.transpose();
+#endif
+}
+
+inline
+const Matrix &OpenGLState::getModelView(void) const
+{
+    return _mModelView;
+}
+
+
+#ifdef OSG_OGL_COREONLY
+inline
+const Matrix &OpenGLState::getModelViewProjection(void) const
+{
+    return _mModelViewProjection;
+}
+
+inline
+const Matrix &OpenGLState::getNormalMatrix(void) const
+{
+    return _mNormalMatrix;
+}
+#endif
+
+
+
+
+inline
 void DrawEnv::setAction(RAction *pAction)
 {
     _pRenderAction = pAction;
@@ -51,19 +111,31 @@ void DrawEnv::setWindow(Window *pWindow)
     _pWindow = pWindow;
 }
 
+inline 
+void DrawEnv::setSGNode(Node *pSGNode)
+{
+    _pSGNode = pSGNode;
+}
+
 inline
-void DrawEnv::setupProjection(const Matrixr &projection,
-                              const Matrixr &translation)
+void DrawEnv::setupProjection(const Matrix &projection,
+                              const Matrix &translation)
 {
     _cameraProjection      = projection;
     _cameraProjectionTrans = translation;
 
-    _cameraFullProjection  = projection;
-    _cameraFullProjection.mult(translation);
+    Matrix proj = projection;
+
+    proj.mult(translation);
+
+    _openGLState.setProjection(proj);
+
+//    _openGLState._mProjection  = projection;
+//    _openGLState._mProjection.mult(translation);
 }
 
 inline
-void DrawEnv::setupViewing(const Matrixr &matrix)
+void DrawEnv::setupViewing(const Matrix &matrix)
 {
     _cameraViewing = matrix;
     _cameraToWorld.invertFrom(matrix);
@@ -73,19 +145,20 @@ void DrawEnv::setupViewing(const Matrixr &matrix)
 }
 
 inline
-void DrawEnv::setObjectToWorld(const Matrixr &matrix)
+void DrawEnv::setObjectToWorld(const Matrix &matrix)
 {
     _objectToWorld = matrix;
 }
 
+
 inline
-void DrawEnv::setCameraNear(const Real &camNear)
+void DrawEnv::setCameraNear(const Real32 &camNear)
 {
     _cameraNear = camNear;
 }
 
 inline
-void DrawEnv::setCameraFar(const Real &camFar)
+void DrawEnv::setCameraFar(const Real32 &camFar)
 {
     _cameraFar = camFar;
 }
@@ -110,62 +183,77 @@ UInt32 DrawEnv::getActiveShader(void)
 }
 
 inline
-const Matrixr &DrawEnv::getWorldToScreen(void) const
+UInt32 DrawEnv::getRequiredOGLFeature(void)
+{
+    return _uiRequiredOGLFeature;
+}
+
+inline
+void DrawEnv::addRequiredOGLFeature(UInt32 uiFeatureMask)
+{
+    _uiRequiredOGLFeature |= uiFeatureMask;
+}
+
+inline
+void DrawEnv::subRequiredOGLFeature(UInt32 uiFeatureMask)
+{
+    _uiRequiredOGLFeature &= ~uiFeatureMask;
+}
+
+inline
+const Matrix &DrawEnv::getWorldToScreen(void) const
 {
     return _worldToScreen;
 }
 
-inline
-const Matrixr &DrawEnv::getCameraFullProjection(void) const
-{
-    return _cameraFullProjection;
-}
 
 inline
-const Matrixr &DrawEnv::getCameraProjection(void) const
+const Matrix &DrawEnv::getCameraProjection(void) const
 {
     return _cameraProjection;
 }
 
 inline
-const Matrixr &DrawEnv::getCameraProjectionTrans(void) const
+const Matrix &DrawEnv::getCameraProjectionTrans(void) const
 {
     return _cameraProjectionTrans;
 }
 
 inline
-const Matrixr &DrawEnv::getCameraDecoration(void) const
+const Matrix &DrawEnv::getCameraDecoration(void) const
 {
     return _cameraDecoration;
 }
 
 
 inline
-const Matrixr &DrawEnv::getCameraViewing(void) const
+const Matrix &DrawEnv::getCameraViewing(void) const
 {
     return _cameraViewing;
 }
 
 inline
-const Matrixr &DrawEnv::getCameraToWorld(void) const
+const Matrix &DrawEnv::getCameraToWorld(void) const
 {
     return _cameraToWorld;
 }
 
+
 inline
-const Matrixr &DrawEnv::getObjectToWorld(void) const
+const Matrix &DrawEnv::getObjectToWorld(void) const
 {
     return _objectToWorld;
 }
 
+
 inline
-Real DrawEnv::getCameraNear(void) const
+Real32 DrawEnv::getCameraNear(void) const
 {
     return _cameraNear;
 }
 
 inline
-Real DrawEnv::getCameraFar(void) const
+Real32 DrawEnv::getCameraFar(void) const
 {
     return _cameraFar;
 }
@@ -183,58 +271,65 @@ Window *DrawEnv::getWindow(void) const
 }
 
 inline
+Node *DrawEnv::getSGNode(void) const
+{
+    return _pSGNode;
+}
+
+inline
 GLenum DrawEnv::getActiveTexTarget(UInt32 uiSlot) const
 {
     return _aActiveTexTargets[uiSlot];
 }
 
 inline
-const Matrixr &DrawEnv::getVPCameraFullProjection(void) const
+const Matrix &DrawEnv::getVPCameraFullProjection(void) const
 {
     return _vpCameraFullProjection;
 }
 
 inline
-const Matrixr &DrawEnv::getVPCameraProjection(void) const
+const Matrix &DrawEnv::getVPCameraProjection(void) const
 {
     return _vpCameraProjection;
 }
 
 
 inline
-const Matrixr &DrawEnv::getVPCameraProjectionTrans(void) const
+const Matrix &DrawEnv::getVPCameraProjectionTrans(void) const
 {
     return _vpCameraProjectionTrans;
 }
 
 
 inline
-const Matrixr &DrawEnv::getVPCameraViewing(void) const
+const Matrix &DrawEnv::getVPCameraViewing(void) const
 {
     return _vpCameraViewing;
 }
 
 inline
-const Matrixr &DrawEnv::getVPCameraToWorld(void) const
+const Matrix &DrawEnv::getVPCameraToWorld(void) const
 {
     return _vpCameraToWorld;
 }
 
 inline
-const Matrixr &DrawEnv::getVPWorldToScreen(void) const
+const Matrix &DrawEnv::getVPWorldToScreen(void) const
 {
     return _vpWorldToScreen;
 }
 
 inline
-void DrawEnv::setVPCameraMatrices(const Matrixr &mFullprojection,
-                                  const Matrixr &mProjection,
-                                  const Matrixr &mProjectionTrans,
-                                  const Matrixr &mViewing,
-                                  const Matrixr &mToWorld,
-                                  const Matrixr &mWorldToScreen  )
+void DrawEnv::setVPCameraMatrices(const Matrix &mFullprojection,
+                                  const Matrix &mProjection,
+                                  const Matrix &mProjectionTrans,
+                                  const Matrix &mViewing,
+                                  const Matrix &mToWorld,
+                                  const Matrix &mWorldToScreen  )
 {
-    _vpCameraFullProjection  = mFullprojection;
+    _openGLState.setProjection(mFullprojection);
+
     _vpCameraProjection      = mProjection;
     _vpCameraProjectionTrans = mProjectionTrans;
     _vpCameraViewing         = mViewing;
@@ -246,7 +341,8 @@ void DrawEnv::setVPCameraMatrices(const Matrixr &mFullprojection,
 inline
 void DrawEnv::initVPMatricesFromCamera(void) 
 {
-    _vpCameraFullProjection  = _cameraFullProjection;
+    _vpCameraFullProjection  = _openGLState.getProjection();
+
     _vpCameraProjection      = _cameraProjection;
     _vpCameraProjectionTrans = _cameraProjectionTrans;
     _vpCameraViewing         = _cameraViewing;
@@ -397,6 +493,30 @@ inline
 const Vec4f &DrawEnv::getTileRegion(void) const
 {
     return _vTileRegion;
+}
+
+inline
+Int32 DrawEnv::getDrawerId(void) const
+{
+    return _iDrawerId;
+}
+
+inline
+void DrawEnv::setDrawerId(Int32 iId)
+{
+    _iDrawerId = iId;
+}
+
+inline
+Int32 DrawEnv::getDrawableId(void) const
+{
+    return _iDrawableId;
+}
+
+inline
+void DrawEnv::setDrawableId(Int32 iId)
+{
+    _iDrawableId = iId;
 }
 
 inline

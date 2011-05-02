@@ -42,7 +42,7 @@
 
 #include "OSGColladaInstanceNode.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 
@@ -60,7 +60,7 @@ ColladaInstanceNode::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaInstanceNode::read(void)
+ColladaInstanceNode::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaInstanceNode::read\n"));
 
@@ -72,16 +72,8 @@ ColladaInstanceNode::read(void)
             ColladaElementFactory::the()->create(
                 getTargetDOMElem(), getGlobal()));
 
-        colNode->read();
+        colNode->read(this);
     }
-}
-
-Node *
-ColladaInstanceNode::process(ColladaElement *parent)
-{
-    ColladaNodeRefPtr colNode = getTargetElem();
-
-    return colNode->createInstance(this);
 }
 
 ColladaNode *

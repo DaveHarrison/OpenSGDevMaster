@@ -42,7 +42,7 @@
 
 #include "OSGColladaSampler2D.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaGlobal.h"
@@ -64,7 +64,7 @@ ColladaSampler2D::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaSampler2D::read(void)
+ColladaSampler2D::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("OSGColladaSampler2D::read\n"));
 

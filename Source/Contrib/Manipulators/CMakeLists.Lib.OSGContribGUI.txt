@@ -30,6 +30,8 @@ OSG_ADD_GLUTPACKAGE(TRUE)
 
 SET(${PROJECT_NAME}_CXXFLAGS ${OSG_ADD_CXX_FLAGS})
 
+SET(${PROJECT_NAME}_NO_DOC TRUE)
+
 OSG_STORE_PROJECT_DEPENDENCIES()
 
 ##############################################################################
@@ -37,6 +39,12 @@ OSG_STORE_PROJECT_DEPENDENCIES()
 ##############################################################################
 
 OSG_ADD_DIRECTORY("Source/Contrib/Manipulators")
+
+##############################################################################
+# setup python bindings
+##############################################################################
+
+SET(${PROJECT_NAME}_NO_PYTHON TRUE)
 
 ##############################################################################
 # setup build

@@ -42,10 +42,11 @@
 
 #include "OSGColladaGlobal.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaCOLLADA.h"
+#include "OSGColladaInstInfo.h"
 #include "OSGColladaElementFactory.h"
 #include "OSGColladaOptions.h"
 
@@ -54,7 +55,7 @@
 /*! \class OSG::ColladaGlobal
     This is the entry point for the Collada loader from which the loading
     process is started.
-    You can think of it as representing the <COLLADA> tag in a document.
+    You can think of it as representing the &lt;COLLADA&gt; tag in a document.
  */
 
 OSG_BEGIN_NAMESPACE
@@ -167,11 +168,14 @@ ColladaGlobal::addElement(ColladaElement *elem)
 
 ColladaGlobal::ColladaGlobal(void)
     : Inherited   ()
+    , _instQueue  ()
+    , _loaderState()
     , _elemStore  ()
     , _options    ()
     , _statColl   (NULL)
     , _pathHandler()
     , _docPath    ()
+    , _docRoot    ()
     , _dae        (NULL)
     , _rootN      (NULL)
 {
@@ -203,14 +207,34 @@ ColladaGlobal::doRead(void)
 
     _statColl->reset  (StatElemDescBase::RESET_ALWAYS);
 
-    domCOLLADARef docRoot = _dae->getRoot(_docPath);
+    _globalsAtt = GlobalsAttachment::create();
+    _docRoot    = _dae->getRoot(_docPath);
 
-    if(docRoot != NULL)
+    if(_docRoot != NULL)
     {
         ColladaCOLLADARefPtr colCOL = dynamic_pointer_cast<ColladaCOLLADA>(
-            ColladaElementFactory::the()->create(docRoot, this));
+            ColladaElementFactory::the()->create(_docRoot, this));
 
-        colCOL->read();
+        colCOL->read(NULL);
+
+        for(UInt32 i = 0; _instQueue.empty() == false; ++i)
+        {
+            if(i > 10)
+            {
+                SWARNING << "ColladaGlobal::doRead: InstanceQueue loop "
+                         << "maximum iteration count reached." << std::endl;
+                break;
+            }
+
+            InstanceQueue workQueue;
+            workQueue.swap(_instQueue);
+
+            InstanceQueueIt iqIt  = workQueue.begin();
+            InstanceQueueIt iqEnd = workQueue.end  ();
+
+            for(; iqIt != iqEnd; ++iqIt)
+                (*iqIt)->process();
+        }
     }
     else
     {
@@ -219,9 +243,16 @@ ColladaGlobal::doRead(void)
                  << std::endl;
     }
     
+    if(_globalsAtt->getMFElements()->empty() == false)
+        _rootN->addAttachment(_globalsAtt);
+
     rootN = _rootN;
 
-    _elemStore.clear();
+    _docRoot    = NULL;
+    _globalsAtt = NULL;
+    _instQueue  .clear();
+    _loaderState.clear();
+    _elemStore  .clear();
 
 #ifndef OSG_COLLADA_SILENT
     std::string statString;

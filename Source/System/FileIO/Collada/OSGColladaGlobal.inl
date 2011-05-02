@@ -50,6 +50,12 @@ ColladaGlobal::editDAE(void)
     return _dae;
 }
 
+inline domCOLLADA *
+ColladaGlobal::getDocRoot(void) const
+{
+    return _docRoot;
+}
+
 inline const std::string &
 ColladaGlobal::getDocPath(void) const
 {
@@ -92,6 +98,58 @@ ColladaGlobal::setRoot(Node *rootN)
     _rootN = rootN;
 }
 
+inline GlobalsAttachment *
+ColladaGlobal::getGlobalsAtt(void) const
+{
+    return _globalsAtt;
+}
+
+inline void
+ColladaGlobal::addLoaderState(
+    const std::string &name, ColladaLoaderState *state)
+{
+    _loaderState[name] = state;
+}
+
+inline void
+ColladaGlobal::subLoaderState(const std::string &name)
+{
+    LoaderStateMapIt sIt = _loaderState.find(name);
+
+    if(sIt != _loaderState.end())
+        _loaderState.erase(sIt);
+}
+
+inline ColladaLoaderState *
+ColladaGlobal::getLoaderState(const std::string &name) const
+{
+    ColladaLoaderState    *retVal = NULL;
+    LoaderStateMapConstIt  sIt    = _loaderState.find(name);
+
+    if(sIt != _loaderState.end())
+        retVal = sIt->second;
+
+    return retVal;
+}
+
+template <class StateTypeT>
+inline StateTypeT *
+ColladaGlobal::getLoaderStateAs(const std::string &name) const
+{
+    return dynamic_cast<StateTypeT *>(getLoaderState(name));
+}
+
+inline const ColladaGlobal::InstanceQueue &
+ColladaGlobal::getInstQueue(void) const
+{
+    return _instQueue;
+}
+
+inline ColladaGlobal::InstanceQueue &
+ColladaGlobal::editInstQueue(void)
+{
+    return _instQueue;
+}
 
 inline const ColladaGlobal::ElementStore &
 ColladaGlobal::getElemStore(void) const

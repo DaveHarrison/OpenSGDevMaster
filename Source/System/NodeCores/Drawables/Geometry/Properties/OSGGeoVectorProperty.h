@@ -51,8 +51,11 @@ OSG_BEGIN_NAMESPACE
 class DrawEnv;
 
 /*! \brief GeoVectorProperty class. See \ref
-           PageWindowGLUTGeoVectorProperty for a description.
-*/
+           PageDrawableGeoVectorProperty for a description.
+    \ingroup GrpDrawablesGeometryProperties
+    \ingroup GrpLibOSGDrawables
+    \includebasedoc
+ */
 
 class OSG_DRAWABLE_DLLMAPPING GeoVectorProperty :
     public GeoVectorPropertyBase
@@ -69,11 +72,8 @@ class OSG_DRAWABLE_DLLMAPPING GeoVectorProperty :
     /*! \name        Arbitrary Type Interface Methods                      */
     /*! \{                                                                 */
 
-#ifndef OSG_EMBEDDED
     typedef Vec4d MaxTypeT;
-#else
-    typedef Vec4f MaxTypeT;
-#endif
+
     // MSVC 7.0 is a little weird about template member methods, that's why
     // the code has to be here...
 

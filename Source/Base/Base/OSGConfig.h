@@ -577,9 +577,6 @@
 # define OSG_STDEXCEPTION_NAMESPACE std
 # endif
 
-# define OSG_FIXED_PROFILE
-# define OSG_PROFILE_SET
-
 # endif // defined(_MSC_VER) && !defined(__ICL)
 
 
@@ -621,7 +618,7 @@
  
 # define OSG_TMPL_STATIC_MEMBER_NEEDS_CLASS_INSTANTIATION
 
-# define OSG_STATIC_MEMEBER_NEEDS_COPY_ASIGN_INIT
+//# define OSG_STATIC_MEMEBER_NEEDS_COPY_ASIGN_INIT
 
 # define OSG_MICROSOFT_DOTNET_COMPILER_HACKS
 
@@ -994,10 +991,6 @@
 # endif
 #endif
 
-#ifndef OSG_PROFILE_SET
-# define OSG_FLOAT_PROFILE
-#endif
-
 #if defined(__sgi) || defined(__linux) || defined(__APPLE__) || \
     defined(__sun) || defined(__hpux)
 
@@ -1075,9 +1068,15 @@
 #    error "mixed up compiler settings, OpenSG libs with OSG_DISABLE_MICROSOFT_SECURE_CXXX off, but _CRT_NONSTDC_NO_DEPRECATE set"
 #  endif
 # endif
+# if (defined(NDEBUG) && defined(OSG_DEBUGRT)) || (defined(OSG_DEBUG) && defined(_DEBUG))
 #  if defined(_SECURE_SCL) && _SECURE_SCL != 1
 #    error "mixed up compiler settings, OpenSG libs with OSG_DISABLE_MICROSOFT_SECURE_CXXX off, but _SECURE_SCL set"
 #  endif
+# else
+#  if defined(_SECURE_SCL) && _SECURE_SCL != 0
+#    error "mixed up compiler settings, OpenSG libs with OSG_DISABLE_MICROSOFT_SECURE_CXXX off, but _SECURE_SCL set"
+#  endif
+# endif
 # if 0
 #  if defined(_SCL_SECURE_NO_WARNINGS)
 #    error "mixed up compiler settings, OpenSG libs with OSG_DISABLE_MICROSOFT_SECURE_CXXX off, but _SCL_SECURE_NO_WARNINGS set"

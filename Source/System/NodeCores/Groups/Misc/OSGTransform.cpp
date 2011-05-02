@@ -43,16 +43,9 @@
 
 #include "OSGGL.h"
 
-#ifndef OSG_EMBEDDED
 #include "OSGIntersectAction.h"
-#endif
 
 #include "OSGRenderAction.h"
-
-#ifdef OSG_HAVE_ACTION //CHECK
-#include "OSGIntersectActor.h"
-#endif
-
 #include "OSGTransform.h"
 #include "OSGVolume.h"
 
@@ -81,7 +74,7 @@ void Transform::changed(ConstFieldMaskArg whichField,
 /*-------------------------------------------------------------------------*/
 /*                               Helper                                    */
 
-void Transform::accumulateMatrix(Matrixr &result)
+void Transform::accumulateMatrix(Matrix &result)
 {
     result.mult(getMatrix());
 }
@@ -152,7 +145,6 @@ ActionBase::ResultE Transform::renderLeave(Action *action)
 /*-------------------------------------------------------------------------*/
 /*                            Intersect                                    */
 
-#ifndef OSG_EMBEDDED
 ActionBase::ResultE Transform::intersectEnter(Action *action)
 {
     // Use parent class for trivial reject
@@ -198,62 +190,6 @@ ActionBase::ResultE Transform::intersectLeave(Action *action)
 
     return ActionBase::Continue;
 }
-#endif
-
-#ifdef OSG_HAVE_ACTION //CHECK
-NewActionTypes::ResultE Transform::intersectActorEnter(
-    ActorBase::FunctorArgumentType &funcArg)
-{
-    IntersectActor *pIA        = dynamic_cast<IntersectActor *>(
-                                                           funcArg.getActor());
-    Matrix          matrix     = this->getMatrix();
-    Line            transLine;
-    Pnt3f           pos;
-    Vec3f           dir;
-
-    matrix.invert();
-
-    matrix.multFull(pIA->getRay().getPosition (), pos);
-    matrix.mult    (pIA->getRay().getDirection(), dir);
-
-    transLine.setValue(pos, dir);
-
-    pIA->beginEditState();
-    {
-        pIA->setRay        (transLine                           );
-        pIA->setScaleFactor(pIA->getScaleFactor() / dir.length());
-    }
-    pIA->endEditState  ();
-
-    pIA->setupChildrenPriorities();
-
-    return NewActionTypes::Continue;
-}
-
-NewActionTypes::ResultE Transform::intersectActorLeave(
-    ActorBase::FunctorArgumentType &funcArg)
-{
-    IntersectActor *pIA    = dynamic_cast<IntersectActor *>(
-                                                           funcArg.getActor());
-    const Matrix   &matrix = this->getMatrix();
-          Pnt3f     pos;
-          Vec3f     dir;
-
-    matrix.multFull(pIA->getRay().getPosition (), pos);
-    matrix.mult    (pIA->getRay().getDirection(), dir);
-
-    pIA->beginEditState();
-    {
-        pIA->setRay        (Line(pos, dir)                      );
-        pIA->setScaleFactor(pIA->getScaleFactor() / dir.length());
-    }
-    pIA->endEditState  ();
-
-    return NewActionTypes::Continue;
-}
-#endif
-
-
 /*-------------------------------------------------------------------------*/
 /*                                Init                                     */
 
@@ -263,41 +199,19 @@ void Transform::initMethod(InitPhase ePhase)
 
     if(ePhase == TypeObject::SystemPost)
     {
-#ifndef OSG_EMBEDDED
         IntersectAction::registerEnterDefault( 
             getClassType(), 
             reinterpret_cast<Action::Callback>(&Transform::intersectEnter));
-        
         IntersectAction::registerLeaveDefault( 
             getClassType(), 
             reinterpret_cast<Action::Callback>(&Transform::intersectLeave));
-#endif
        
         RenderAction::registerEnterDefault(
             Transform::getClassType(), 
             reinterpret_cast<Action::Callback>(&Transform::renderEnter));
-
         RenderAction::registerLeaveDefault(
             Transform::getClassType(), 
             reinterpret_cast<Action::Callback>(&Transform::renderLeave));
-
-#ifdef OSG_HAVE_ACTION //CHECK
-    IntersectActor::regClassEnter(
-        osgTypedMethodFunctor2BaseCPtr<
-          NewActionTypes::ResultE,
-          TransformPtr           ,
-          NodeCorePtr            ,
-          ActorBase::FunctorArgumentType &>(&Transform::intersectActorEnter),
-        getClassType());
-
-    IntersectActor::regClassLeave(
-        osgTypedMethodFunctor2BaseCPtr<
-          NewActionTypes::ResultE,
-          TransformPtr           ,
-          NodeCorePtr            ,
-          ActorBase::FunctorArgumentType &>(&Transform::intersectActorLeave),
-        getClassType());
-#endif
     }
 }
 

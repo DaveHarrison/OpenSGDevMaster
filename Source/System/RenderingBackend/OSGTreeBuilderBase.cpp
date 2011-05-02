@@ -77,6 +77,11 @@ void TreeBuilderBase::setNodePool(RenderTreeNodePool *pNodePool)
     _pNodePool = pNodePool;
 }
 
+RenderTreeNodePool *TreeBuilderBase::getNodePool(void)
+{
+    return _pNodePool;
+}
+
 void TreeBuilderBase::reset(void)
 {
     _uiMatrixId = 0;
@@ -92,7 +97,9 @@ void TreeBuilderBase::drawNode(RenderTreeNode      *pNode,
 
         if(uiNextMatrix != 0 && uiNextMatrix != _uiActiveMatrix)
         {
+#ifndef OSG_OGL_COREONLY
             glLoadMatrixf(pNode->getMatrixStore().second.getValues());
+#endif
 
             _uiActiveMatrix = uiNextMatrix;
 
@@ -100,7 +107,8 @@ void TreeBuilderBase::drawNode(RenderTreeNode      *pNode,
 
             updateTopMatrix(denv);
 
-            denv.setObjectToWorld(_accMatrix);
+            denv             .setObjectToWorld(_accMatrix        );
+            denv._openGLState.setModelView    (_currMatrix.second);
 
             ++part->_uiNumMatrixChanges;
 
@@ -131,6 +139,7 @@ void TreeBuilderBase::drawNode(RenderTreeNode      *pNode,
         StateOverride *pNewStateOverride = pNode->getStateOverride();
 
         denv.setLightState(pNode->getLightState());
+        denv.setSGNode    (pNode->getNode      ());
 
         denv.activateState(pNewState, pNewStateOverride);
 
@@ -138,6 +147,8 @@ void TreeBuilderBase::drawNode(RenderTreeNode      *pNode,
         {
             pNode->getFunctor()(&denv);
         }
+
+        denv.setSGNode(NULL);
 
         if(pNode->getFirstChild() != NULL)
         {

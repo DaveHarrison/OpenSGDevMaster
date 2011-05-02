@@ -43,6 +43,7 @@
 #endif
 
 #include "OSGBaseTypes.h"
+#include "OSGDeprecatedCPP.h"
 #include "OSGSingletonHolder.h"
 #include "OSGContainerForwards.h"
 #include "OSGTypeBase.h"
@@ -50,7 +51,6 @@
 #include "OSGAspectStore.h"
 #include "OSGContainerIdMapper.h"
 
-//#include "OSGFieldContainer.h"
 
 #include <deque>
 
@@ -73,6 +73,13 @@ struct FieldContainerFactoryDesc
         return "ContainerFactory::cflock";
     }
 };
+
+/*! \brief Accessible via #TypeFactory
+    \ingroup GrpBaseBaseTypeSystem
+    \ingroup GrpBaseBase
+    \ingroup GrpLibOSGBase
+    \nohierarchy
+ */
 
 class OSG_BASE_DLLMAPPING DerivedFieldContainerTypeIterator
 {
@@ -123,8 +130,9 @@ class OSG_BASE_DLLMAPPING FieldContainerFactoryBase :
     typedef FieldContainer                *ContainerHandlerP;
 #endif
 
-    typedef std::deque<ContainerHandlerP>  ContainerStore;
-    typedef ContainerStore::iterator       ContainerStoreIt;
+    typedef OSG_HASH_MAP(UInt32, ContainerHandlerP)  ContainerStore;
+    typedef ContainerStore::iterator                 ContainerStoreIt;
+    typedef ContainerStore::const_iterator           ContainerStoreConstIt;
 
     /*---------------------------------------------------------------------*/
     /*! \name                      dcast                                   */
@@ -157,17 +165,30 @@ class OSG_BASE_DLLMAPPING FieldContainerFactoryBase :
     /*! \name                      Get                                     */
     /*! \{                                                                 */
 
-    UInt32            getNumContainers   (void                ) const;
-    ContainerPtr      getContainer       (UInt32 uiContainerId) const;
-    ContainerHandlerP getContainerHandler(UInt32 uiContainerId) const;
+    UInt32            getNumLiveContainers (void                ) const;
+    UInt32            getNumTotalContainers(void                ) const;
 
-    ContainerPtr      getMappedContainer (UInt32 uiContainerId) const;
+    ContainerPtr      getContainer         (UInt32 uiContainerId) const;
+    ContainerHandlerP getContainerHandler  (UInt32 uiContainerId) const;
 
-    Int32             findContainer      (ContainerPtr ptr    ) const;
-    
+    ContainerPtr      getMappedContainer   (UInt32 uiContainerId) const;
+
+    Int32             findContainer        (ContainerPtr ptr    ) const;
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                      Get                                     */
+    /*! \{                                                                 */
+
+    void                  lockStore  (void);
+    void                  unlockStore(void);
+
+    ContainerStoreConstIt beginStore (void) const;
+    ContainerStoreConstIt endStore   (void) const;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                  Registration                                */
     /*! \{                                                                 */
 
     UInt32 registerContainer  (const ContainerPtr &pContainer   );
@@ -237,11 +258,10 @@ class OSG_BASE_DLLMAPPING FieldContainerFactoryBase :
     /*! \name                      Fields                                  */
     /*! \{                                                                 */
 
-#ifndef OSG_EMBEDDED
     LockRefPtr         _pStoreLock;
-#endif
 
-    ContainerStore     _vContainerStore;
+    UInt32             _nextContainerId;
+    ContainerStore     _containerStore;
 
     /*! Currently active field container mapper. */
     ContainerIdMapper *_pMapper;
@@ -289,14 +309,6 @@ class OSG_BASE_DLLMAPPING FieldContainerFactoryBase :
     /*!\brief prohibit default function (move to 'public' if needed) */
     void operator =(const FieldContainerFactoryBase &source);
 };
-
-#if defined(WIN32)
-#    if !defined(OSG_COMPILE_FIELDCONTAINERFACTORY)
-//OSG_SYSTEM_EXPIMP_TMPL
-//template
-//class OSG_SYSTEM_DLLMAPPING SingletonHolder<FieldContainerFactoryBase>;
-#    endif
-#endif
 
 /*! \typedef OSG::SingletonHolder<OSG::FieldContainerFactoryBase> FieldContainerFactory;
     \ingroup GrpBaseFieldContainerBase

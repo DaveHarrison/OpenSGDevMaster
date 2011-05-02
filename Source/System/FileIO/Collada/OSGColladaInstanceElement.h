@@ -44,7 +44,7 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaElement.h"
 
@@ -53,6 +53,9 @@ OSG_BEGIN_NAMESPACE
 // forward decl
 class ColladaInstantiableElement;
 
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaInstanceElement : public ColladaElement
 {
@@ -72,8 +75,7 @@ class OSG_FILEIO_DLLMAPPING ColladaInstanceElement : public ColladaElement
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void            read   (void                  ) = 0;
-    virtual FieldContainer *process(ColladaElement *parent) = 0;
+    virtual void read(ColladaElement *colElemParent) = 0;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

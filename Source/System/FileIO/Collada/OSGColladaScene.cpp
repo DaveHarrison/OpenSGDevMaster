@@ -42,16 +42,18 @@
 
 #include "OSGColladaScene.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
+#include "OSGColladaGlobal.h"
 #include "OSGColladaInstanceVisualScene.h"
+#include "OSGColladaVisualScene.h"
 
 #include <dom/domCOLLADA.h>
 #include <dom/domInstanceWithExtra.h>
 
 /*! \class OSG::ColladaScene
-    Handles the <scene> tag.
+    Handles the &lt;scene&gt; tag.
  */
 
 OSG_BEGIN_NAMESPACE
@@ -67,7 +69,7 @@ ColladaScene::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaScene::read(void)
+ColladaScene::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaScene::read\n"));
 
@@ -75,31 +77,37 @@ ColladaScene::read(void)
 
     OSG_ASSERT(scene != NULL);
 
-    domInstanceWithExtraRef instVisScene = scene->getInstance_visual_scene();
+    domInstanceWithExtraRef          instVisScene    =
+        scene->getInstance_visual_scene();
+    ColladaInstanceVisualSceneRefPtr colInstVisScene = NULL;
 
     if(instVisScene != NULL)
     {
-        _colInstVisScene = dynamic_pointer_cast<ColladaInstanceVisualScene>(
+        colInstVisScene = dynamic_pointer_cast<ColladaInstanceVisualScene>(
             ColladaElementFactory::the()->create(instVisScene, getGlobal()));
 
-        _colInstVisScene->read();
+        colInstVisScene->read(this);
     }
     else
     {
-        SWARNING << "ColladaScene::read: No <instance_visual_scene> tag."
+        SWARNING << "ColladaScene::read: No <instance_visual_scene> tag!"
                  << std::endl;
     }
-}
 
-void
-ColladaScene::process(void)
-{
-    _colInstVisScene->process(this);
+    OSG_ASSERT(colInstVisScene                  != NULL);
+    OSG_ASSERT(colInstVisScene->getTargetElem() != NULL);
+
+    ColladaInstInfoRefPtr colInstInfo =
+        ColladaVisualScene::ColladaVisualSceneInstInfo::create(
+            this, colInstVisScene);
+
+    Node *rootN = colInstVisScene->getTargetElem()->createInstance(colInstInfo);
+
+    getGlobal()->setRoot(rootN);
 }
 
 ColladaScene::ColladaScene(daeElement *elem, ColladaGlobal *global)
-    : Inherited       (elem, global)
-    , _colInstVisScene(NULL        )
+    : Inherited(elem, global)
 {
 }
 

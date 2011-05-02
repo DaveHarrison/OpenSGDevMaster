@@ -68,6 +68,11 @@ class TraversalValidator;
 template <class ParentT>
 class StageHandlerMixin;
 
+/*! \ingroup GrpSystemActionBase
+    \ingroup GrpLibOSGSystem
+    \nohierarchy
+ */
+
 struct RenderDataSlotDesc
 {
     typedef Action                   ParentT;
@@ -87,6 +92,9 @@ struct RenderDataSlotDesc
     }
 };
 
+/*! \ingroup GrpSystemActionBase
+ */
+
 typedef DataSlotMixin< 
             MixinHead < 
                 RenderDataSlotDesc > > RenderActionBaseParent;
@@ -94,6 +102,8 @@ typedef DataSlotMixin<
 
 
 /*! \brief Base class using the render action interface of window
+    \ingroup GrpSystemActionBase
+    \ingroup GrpLibOSGSystem
  */
 
 class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
@@ -154,6 +164,9 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
     // control drawing of checked volumes
     virtual bool getVolumeDrawing          (void            ) const;
     virtual void setVolumeDrawing          (bool val = false);
+
+    virtual bool getZWriteTrans            (void            ) const;
+    virtual void setZWriteTrans            (bool val = false);
     
     // control automatic frustum calculation
             bool                 getAutoFrustum   (void                ) const;
@@ -163,17 +176,6 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
     virtual const FrustumVolume &getFrustum       (void                ) const;
     virtual void                 setFrustum       (FrustumVolume &frust);    
 
-    /*! \}                                                                 */
-    /*---------------------------------------------------------------------*/
-    /*! \name                   Lights                                     */
-    /*! \{                                                                 */
-
-#if 0
-           // select all visible nodes
-            UInt32  selectVisibles(void      );
-
-    virtual bool    isVisible     (Node *node) = 0;
-#endif
 
     /*----------- multi-frame buffering / split cull/draw -------------------*/
 
@@ -195,14 +197,11 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
     /*! \name                   Lights                                     */
     /*! \{                                                                 */
 
-    TraversalValidator *getTravValidator (void      );
-    UInt16              getFrameTravCount(void      );
+    TraversalValidator *getTravValidator (void     );
+    UInt16              getFrameTravCount(void     );
 
-    void                setDrawerId      (Int32 iId );
-    Int32               getDrawerId      (void      );
-
-    void                setDrawableId    (Int32 iId );
-    Int32               getDrawableId    (void      );
+    void                setDrawerId      (Int32 iId);
+    void                setDrawableId    (Int32 iId);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -235,6 +234,8 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
     template <class ParentT>
     friend class StageHandlerMixin;
 
+    friend class Viewport;
+
     /*---------------------------------------------------------------------*/
     /*! \name                   Constructors                               */
     /*! \{                                                                 */
@@ -260,7 +261,13 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
+    /*! \name                   Internal updates                           */
+    /*! \{                                                                 */
 
+    Int32 getDrawerId  (void);
+    Int32 getDrawableId(void);
+
+    /*! \}                                                                 */
     //-----------------------------------------------------------------------
     //   instance variables                                                  
     //-----------------------------------------------------------------------
@@ -280,6 +287,7 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
     
     bool                _bFrustumCulling;
     bool                _bVolumeDrawing;
+    bool                _bZWriteTrans;
     bool                _bAutoFrustum;
     bool                _bCorrectTwoSidedLighting;
 
@@ -289,6 +297,7 @@ class OSG_SYSTEM_DLLMAPPING RenderActionBase : public RenderActionBaseParent
 
     Int32               _iDrawerId;
     Int32               _iDrawableId;
+
     RenderPropType      _oCurrentRenderProp;
     bool                _bDrawPartPar;
 

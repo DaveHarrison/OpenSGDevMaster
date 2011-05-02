@@ -42,13 +42,15 @@
 #pragma once
 #endif
 
-#ifdef WIN32
-
 #include "OSGWIN32WindowBase.h"
 
 OSG_BEGIN_NAMESPACE
 
-/*! \brief Win32 Window class. See \ref PageWindowWin32 for a description. */
+/*! \brief Win32 Window class. See \ref PageWindowWIN32 for a description. 
+    \ingroup GrpWindowWIN32Obj
+    \ingroup GrpLibOSGWindowWIN32
+    \includebasedoc
+ */
 
 class OSG_WINDOWWIN32_DLLMAPPING WIN32Window : public WIN32WindowBase
 {
@@ -144,7 +146,5 @@ OSG_END_NAMESPACE
 
 #include "OSGWIN32Window.inl"
 #include "OSGWIN32WindowBase.inl"
-
-#endif /* WIN32 */
 
 #endif /* _OSGWIN32WINDOW_H_ */

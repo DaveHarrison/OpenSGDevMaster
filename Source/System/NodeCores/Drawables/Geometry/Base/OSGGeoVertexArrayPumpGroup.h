@@ -55,7 +55,8 @@ class Window;
 
 /*! \brief Pump group using vertex arrays. Only works for non- and
      single-indexed geometry
-*/
+    \ingroup GrpDrawablesGeometryHelpers
+ */
 
 class OSG_DRAWABLE_DLLMAPPING GeoVertexArrayPumpGroup : 
     public GeoPumpGroup
@@ -75,14 +76,8 @@ class OSG_DRAWABLE_DLLMAPPING GeoVertexArrayPumpGroup :
     /*! \name                       Get                                    */
     /*! \{                                                                 */
 
-    GeoPump         getGeoPump        (DrawEnv                 *pEnv,
-                                       PropertyCharacteristics  acset);
-
-    PartialGeoPump  getPartialGeoPump (DrawEnv                 *pEnv, 
-                                       PropertyCharacteristics  acset);
-
-    ExtIndexGeoPump getExtIndexGeoPump(DrawEnv                 *pEnv, 
-                                       PropertyCharacteristics  acset);
+    virtual GeoPump getGeoPump(DrawEnv                 *pEnv,
+                               PropertyCharacteristics  acset);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
@@ -122,12 +117,20 @@ class OSG_DRAWABLE_DLLMAPPING GeoVertexArrayPumpGroup :
     /*---------------------------------------------------------------------*/
     /*! \name                    Pump functions                            */
     /*! \{                                                                 */
-    
-    static void masterGeoPump       (DrawEnv *pEnv, Geometry *geo);
 
-    static void masterClassicGeoPump(DrawEnv *pEnv, Geometry *geo);
-    static void masterAttribGeoPump (DrawEnv *pEnv, Geometry *geo);
-    
+    static void masterClassicGeoPump(
+              DrawEnv                     *pEnv,
+        const GeoIntegralProperty         *lengths,
+        const GeoIntegralProperty         *types,
+        const Geometry::MFPropertiesType  *prop,
+        const Geometry::MFPropIndicesType *propIdx );
+
+    static void masterAttribGeoPump(
+              DrawEnv                     *pEnv,
+        const GeoIntegralProperty         *lengths,
+        const GeoIntegralProperty         *types,
+        const Geometry::MFPropertiesType  *prop,
+        const Geometry::MFPropIndicesType *propIdx );
 
     /*! \}                                                                 */
 };

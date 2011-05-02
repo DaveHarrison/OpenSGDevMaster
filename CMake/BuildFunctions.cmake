@@ -111,8 +111,10 @@ ENDFUNCTION(OSG_GET_ALL_DEP_OSG_LIB)
 MACRO(OSG_ADD_PROJECT PNAME)
     PROJECT(${PNAME})
     IF(${OSG_CMAKE_PASS} STREQUAL "OSGCOLLECT")
-        OPTION(OSGBUILD_${PROJECT_NAME} "Build the ${PROJECT_NAME} library" ON)
+      OPTION(OSGBUILD_${PROJECT_NAME} "Build the ${PROJECT_NAME} library" ON)
+      IF(NOT OSG_DISABLE_SOURCE_GROUPS)
         SET(${PROJECT_NAME}_SOURCE_GROUPS "" CACHE INTERNAL "" FORCE)
+      ENDIF()
     ENDIF(${OSG_CMAKE_PASS} STREQUAL "OSGCOLLECT")
 ENDMACRO(OSG_ADD_PROJECT)
 
@@ -124,6 +126,7 @@ MACRO(OSG_SELECT_PROJECT)
     IF(OSGBUILD_${PROJECT_NAME})
         MESSAGE(STATUS "Processing ${PROJECT_NAME}")
     ELSE(OSGBUILD_${PROJECT_NAME})
+        OSG_MSG("Skipping ${PROJECT_NAME}")
         RETURN()
     ENDIF(OSGBUILD_${PROJECT_NAME})
 
@@ -195,6 +198,8 @@ MACRO(OSG_SELECT_PROJECT)
 
     SET(${PROJECT_NAME}_SUFFIX)
 
+    SET(${PROJECT_NAME}_NO_DOC)
+
 ENDMACRO(OSG_SELECT_PROJECT)
 
 #############################################################################
@@ -248,6 +253,16 @@ FUNCTION(OSG_STORE_PROJECT_DEPENDENCIES)
     IF(NOT ${OSG_CMAKE_PASS} STREQUAL "OSGCOLLECT")
         RETURN()
     ENDIF(NOT ${OSG_CMAKE_PASS} STREQUAL "OSGCOLLECT")
+
+    IF(OSG_ENABLE_WRITE_PYTHON_TO_SOURCE)
+      SET(OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/module" CACHE INTERNAL "" FORCE)
+    ELSE()
+      IF(OSG_PYTHON_MODULE_BASE_DIR)
+        SET(OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR "${OSG_PYTHON_MODULE_BASE_DIR}/${PROJECT_NAME}/module" CACHE INTERNAL "" FORCE)
+      ELSE()
+        SET(OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR "${CMAKE_BINARY_DIR}/Python/${PROJECT_NAME}/module" CACHE INTERNAL "" FORCE)
+      ENDIF()
+    ENDIF()
 
     #########################################
     # store dependencies for the build
@@ -333,12 +348,62 @@ FUNCTION(OSG_STORE_PROJECT_DEPENDENCIES)
     FILE(APPEND ${${PROJECT_NAME}_CONFIG_FILE}
         " ],\n")
 
+    # global dependencies
+    FOREACH(DEPLIB ${OSG_GLOBAL_DEP_LIBS})
+        OSG_EXTRACT_LIB_AND_LIBDIR("${${DEPLIB}}" LIBS LIBDIRS)
+
+        FOREACH(LIB ${LIBS})
+            # if the lib is an import target, get the location and
+            # split that into library name and path
+
+            IF(TARGET ${LIB})
+                GET_TARGET_PROPERTY(_LIB_LOCATION ${LIB} IMPORTED_LOCATION)
+
+                OSG_EXTRACT_LIB_AND_LIBDIR("${_LIB_LOCATION}" _LIBS _LIBDIRS)
+
+                LIST(APPEND DEPLIBS    ${_LIBS})
+                LIST(APPEND DEPLIBDIRS ${_LIBDIRS})
+            ELSE(TARGET ${LIB})
+                LIST(APPEND DEPLIBS ${LIB})
+            ENDIF(TARGET ${LIB})
+        ENDFOREACH(LIB)
+
+        LIST(APPEND DEPLIBDIRS ${LIBDIRS})
+    ENDFOREACH(DEPLIB)
+
+    FOREACH(DEPLIBDIR ${OSG_GLOBAL_DEP_LIBDIR})
+        OSG_EXTRACT_LIBDIR("${${DEPLIBDIR}}" LIBDIRS)
+
+        LIST(APPEND DEPLIBDIRS ${LIBDIRS})
+    ENDFOREACH(DEPLIBDIR)
+
+    FOREACH(DEPINCDIR ${OSG_GLOBAL_DEP_INCDIR})
+        OSG_EXTRACT_INCDIR("${${DEPINCDIR}}" INCDIRS)
+
+        LIST(APPEND DEPINCDIRS ${INCDIRS})
+    ENDFOREACH(DEPINCDIR)
+
     # External libraries this lib depends on
     # we build lists of libs, libdirs and incdirs then write them
     FOREACH(DEPLIB ${${PROJECT_NAME}_DEP_LIB})
         OSG_EXTRACT_LIB_AND_LIBDIR("${${DEPLIB}}" LIBS LIBDIRS)
 
-        LIST(APPEND DEPLIBS ${LIBS})
+        FOREACH(LIB ${LIBS})
+            # if the lib is an import target, get the location and
+            # split that into library name and path
+
+            IF(TARGET ${LIB})
+                GET_TARGET_PROPERTY(_LIB_LOCATION ${LIB} IMPORTED_LOCATION)
+
+                OSG_EXTRACT_LIB_AND_LIBDIR("${_LIB_LOCATION}" _LIBS _LIBDIRS)
+
+                LIST(APPEND DEPLIBS    ${_LIBS})
+                LIST(APPEND DEPLIBDIRS ${_LIBDIRS})
+            ELSE(TARGET ${LIB})
+                LIST(APPEND DEPLIBS ${LIB})
+            ENDIF(TARGET ${LIB})
+        ENDFOREACH(LIB)
+
         LIST(APPEND DEPLIBDIRS ${LIBDIRS})
     ENDFOREACH(DEPLIB)
 
@@ -592,56 +657,59 @@ FUNCTION(OSG_ADD_DIRECTORY DIRNAME)
              "LIST(APPEND ${PROJECT_NAME}_MOC \"${LOCAL_MOC}\")\n\n")
     ENDIF(LOCAL_MOC)
 
-    IF(NOT ${PROJECT_NAME}_BASE_DIR)
-      # Add the source files to the source group
-      #Strip the path down to a relative one
-      IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${DIRNAME}")
-        FILE(RELATIVE_PATH THE_SOURCE_GROUP
-                           ${CMAKE_CURRENT_SOURCE_DIR}/Source
-                           ${CMAKE_CURRENT_SOURCE_DIR}/${DIRNAME})
-      ELSEIF(EXISTS "${CMAKE_SOURCE_DIR}/${DIRNAME}")
-        FILE(RELATIVE_PATH THE_SOURCE_GROUP
-                           ${CMAKE_SOURCE_DIR}/Source
-                           ${CMAKE_SOURCE_DIR}/${DIRNAME})
+    IF(NOT OSG_DISABLE_SOURCE_GROUPS)
+      IF(NOT ${PROJECT_NAME}_BASE_DIR)
+        # Add the source files to the source group
+        #Strip the path down to a relative one
+        IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${DIRNAME}")
+          FILE(RELATIVE_PATH THE_SOURCE_GROUP
+                             ${CMAKE_CURRENT_SOURCE_DIR}/Source
+                             ${CMAKE_CURRENT_SOURCE_DIR}/${DIRNAME})
+        ELSEIF(EXISTS "${CMAKE_SOURCE_DIR}/${DIRNAME}")
+          FILE(RELATIVE_PATH THE_SOURCE_GROUP
+                             ${CMAKE_SOURCE_DIR}/Source
+                             ${CMAKE_SOURCE_DIR}/${DIRNAME})
+        ELSE()
+          FILE(RELATIVE_PATH THE_SOURCE_GROUP
+                             ${CMAKE_SOURCE_DIR}/Source
+                             ${CMAKE_SOURCE_DIR}/${DIRNAME})
+        ENDIF()
       ELSE()
-        FILE(RELATIVE_PATH THE_SOURCE_GROUP
-                           ${CMAKE_SOURCE_DIR}/Source
-                           ${CMAKE_SOURCE_DIR}/${DIRNAME})
+          FILE(RELATIVE_PATH THE_SOURCE_GROUP
+                             ${${PROJECT_NAME}_BASE_DIR}/
+                             ${_OSG_CURR_DIRNAME})
       ENDIF()
-    ELSE()
-        FILE(RELATIVE_PATH THE_SOURCE_GROUP
-                           ${${PROJECT_NAME}_BASE_DIR}/
-                           ${_OSG_CURR_DIRNAME})
-    ENDIF()
 
-    IF(THE_SOURCE_GROUP)
-         STRING(REPLACE "/" "\\" THE_SOURCE_GROUP ${THE_SOURCE_GROUP})
-    ELSE(THE_SOURCE_GROUP)
-         SET(THE_SOURCE_GROUP "Source")
-    ENDIF(THE_SOURCE_GROUP)
+      IF(THE_SOURCE_GROUP)
+           STRING(REPLACE "/" "\\" THE_SOURCE_GROUP ${THE_SOURCE_GROUP})
+      ELSE(THE_SOURCE_GROUP)
+           SET(THE_SOURCE_GROUP "Source")
+      ENDIF(THE_SOURCE_GROUP)
 
-    IF(${THE_SOURCE_GROUP} STREQUAL "\\")
-         SET(THE_SOURCE_GROUP "Source")
-    ENDIF()
+      IF(${THE_SOURCE_GROUP} STREQUAL "\\")
+           SET(THE_SOURCE_GROUP "Source")
+      ENDIF()
 
-    LIST(APPEND ${PROJECT_NAME}_SOURCE_GROUPS ${THE_SOURCE_GROUP})
-    SET(${PROJECT_NAME}_SOURCE_GROUPS ${${PROJECT_NAME}_SOURCE_GROUPS}
-                                      CACHE INTERNAL "" FORCE)
+      LIST(APPEND ${PROJECT_NAME}_SOURCE_GROUPS ${THE_SOURCE_GROUP})
+      SET(${PROJECT_NAME}_SOURCE_GROUPS ${${PROJECT_NAME}_SOURCE_GROUPS}
+                                        CACHE INTERNAL "" FORCE)
 
-    STRING(REPLACE "\\" "_" THE_SOURCE_GROUP ${THE_SOURCE_GROUP})
-    LIST(APPEND ${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}
-                ${LOCAL_SRC}
-                ${LOCAL_HDR}
-                ${LOCAL_INL}
-                ${LOCAL_INS}
-                ${LOCAL_FCD}
-                ${LOCAL_LL}
-                ${LOCAL_YY}
-                ${LOCAL_MOC})
+      STRING(REPLACE "\\" "_" THE_SOURCE_GROUP ${THE_SOURCE_GROUP})
+      LIST(APPEND ${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}
+                  ${LOCAL_SRC}
+                  ${LOCAL_HDR}
+                  ${LOCAL_INL}
+                  ${LOCAL_INS}
+                  ${LOCAL_FCD}
+                  ${LOCAL_LL}
+                  ${LOCAL_YY}
+                  ${LOCAL_MOC})
 
-    SET(${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}
-          ${${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}}
-          CACHE INTERNAL "" FORCE)
+      SET(${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}
+            ${${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}}
+            CACHE INTERNAL "" FORCE)
+
+    ENDIF(NOT OSG_DISABLE_SOURCE_GROUPS)
 
     # unittests
     IF(LOCAL_UNITTEST_SRC)
@@ -854,19 +922,26 @@ FUNCTION(OSG_SETUP_LIBRARY_BUILD PROJ_DEFINE)
 
     ## LINK_DIRS have to go first, before the ADD_LIB statement
 
+    FOREACH(LIBDIR ${OSG_GLOBAL_DEP_LIBDIR})
+        OSG_MSG("  (global) - library dir ${LIBDIR} = ${${LIBDIR}}")
+        LINK_DIRECTORIES(${${LIBDIR}})
+    ENDFOREACH(LIBDIR)
+
     FOREACH(LIBDIR ${${PROJECT_NAME}_DEP_LIBDIR})
-        OSG_MSG("  library dir ${LIBDIR} = ${${LIBDIR}}")
+        OSG_MSG("  (global) - library dir ${LIBDIR} = ${${LIBDIR}}")
         LINK_DIRECTORIES(${${LIBDIR}})
     ENDFOREACH(LIBDIR)
 
 
-    #Add Source Files to Source Groups
-    #Loop through all of the groups for this Project
-    FOREACH(PROJECT_SOURCE_GROUP_NAME ${${PROJECT_NAME}_SOURCE_GROUPS})
+    IF(NOT OSG_DISABLE_SOURCE_GROUPS)
+      #Add Source Files to Source Groups
+      #Loop through all of the groups for this Project
+      FOREACH(PROJECT_SOURCE_GROUP_NAME ${${PROJECT_NAME}_SOURCE_GROUPS})
         STRING(REPLACE "\\" "_" THE_SOURCE_GROUP ${PROJECT_SOURCE_GROUP_NAME})
         SOURCE_GROUP(${PROJECT_SOURCE_GROUP_NAME} FILES
                      ${${PROJECT_NAME}_SOURCE_GROUP_${THE_SOURCE_GROUP}})
-    ENDFOREACH(PROJECT_SOURCE_GROUP_NAME)
+      ENDFOREACH(PROJECT_SOURCE_GROUP_NAME)
+    ENDIF(NOT OSG_DISABLE_SOURCE_GROUPS)
 
     ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRC}
                                 ${${PROJECT_NAME}_HDR}
@@ -897,6 +972,7 @@ FUNCTION(OSG_SETUP_LIBRARY_BUILD PROJ_DEFINE)
                             SUFFIX ${${PROJECT_NAME}_SUFFIX})
 
     ENDIF(${PROJECT_NAME}_SUFFIX)
+
     # dependencies - OpenSG
     OSG_GET_ALL_DEP_OSG_LIB(
         "${${PROJECT_NAME}_DEP_OSG_LIB}" DEP_OSG_LIST DEP_MISSING_LIST)
@@ -927,19 +1003,36 @@ FUNCTION(OSG_SETUP_LIBRARY_BUILD PROJ_DEFINE)
         TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${OSGDEP})
     ENDFOREACH(OSGDEP)
 
+    # dependencies - global
+    FOREACH(INCDIR ${OSG_GLOBAL_DEP_INCDIR})
+        OSG_MSG("  (global) - include dir ${INCDIR} = ${${INCDIR}}")
+        INCLUDE_DIRECTORIES(${${INCDIR}})
+    ENDFOREACH(INCDIR)
+
+    FOREACH(LIB ${OSG_GLOBAL_DEP_LIBS})
+        OSG_MSG("  (global) - library ${LIB} = ${${LIB}}")
+        TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${${LIB}})
+    ENDFOREACH(LIB)
+
+    IF(OSG_GLOBAL_DEP_DEFS)
+        OSG_MSG("  (global) - definitions = ${OSG_GLOBAL_DEP_DEFS}")
+        SET_PROPERTY(TARGET ${PROJECT_NAME}
+            APPEND PROPERTY COMPILE_DEFINITIONS ${OSG_GLOBAL_DEP_DEFS})
+    ENDIF(OSG_GLOBAL_DEP_DEFS)
+
     # dependencies - External
     FOREACH(INCDIR ${${PROJECT_NAME}_DEP_INCDIR})
-        OSG_MSG("  include dir ${INCDIR} = ${${INCDIR}}")
+        OSG_MSG("  (external) - include dir ${INCDIR} = ${${INCDIR}}")
         INCLUDE_DIRECTORIES(${${INCDIR}})
     ENDFOREACH(INCDIR)
 
     FOREACH(LIB ${${PROJECT_NAME}_DEP_LIB})
-        OSG_MSG("  library ${LIB} = ${${LIB}}")
+        OSG_MSG("  (external) - library ${LIB} = ${${LIB}}")
         TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${${LIB}})
     ENDFOREACH(LIB)
 
     IF(${PROJECT_NAME}_DEP_DEFS)
-        OSG_MSG("  definitions = ${${PROJECT_NAME}_DEP_DEFS}")
+        OSG_MSG("  (external) - definitions = ${${PROJECT_NAME}_DEP_DEFS}")
         SET_PROPERTY(TARGET ${PROJECT_NAME}
             APPEND PROPERTY COMPILE_DEFINITIONS ${${PROJECT_NAME}_DEP_DEFS})
     ENDIF(${PROJECT_NAME}_DEP_DEFS)
@@ -1093,6 +1186,28 @@ FUNCTION(OSG_SETUP_LIBRARY_BUILD PROJ_DEFINE)
                 CONFIGURATIONS RelWithDebInfo
                 RUNTIME DESTINATION lib/relwithdbg
                 COMPONENT release_with_debinfo_libraries)
+    ELSEIF(XCODE_VERSION)
+#        INSTALL(TARGETS ${PROJECT_NAME}
+#                CONFIGURATIONS Release
+#                RUNTIME DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}
+#                COMPONENT release_runtimes)
+
+        INSTALL(TARGETS ${PROJECT_NAME}
+                CONFIGURATIONS Release
+                LIBRARY DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}
+                ARCHIVE DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}
+                COMPONENT release_libraries)
+
+#        INSTALL(TARGETS ${PROJECT_NAME}
+#                CONFIGURATIONS Debug
+#                RUNTIME DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}/debug
+#                COMPONENT debug_runtimes)
+
+        INSTALL(TARGETS ${PROJECT_NAME}
+                CONFIGURATIONS Debug
+                LIBRARY DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}/debug
+                ARCHIVE DESTINATION lib${OSG_LIBDIR_BASE_SUFFIX}/debug
+                COMPONENT debug_libraries)
     ELSE(WIN32)
         INSTALL(TARGETS ${PROJECT_NAME}
                 RUNTIME DESTINATION lib${OSG_LIBDIR_SUFFIX}
@@ -1121,6 +1236,20 @@ FUNCTION(OSG_SETUP_LIBRARY_BUILD PROJ_DEFINE)
                         GROUP_READ
                         WORLD_READ
                 COMPONENT code_headers)
+
+    IF(NOT ${PROJECT_NAME}_NO_PYTHON)
+      FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "libInfo[\"${PROJECT_NAME}\"] = [\n")
+      FOREACH(OSG_DEP ${DEP_OSG_LIST})
+        FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "\"${OSG_DEP}\",")
+      ENDFOREACH()
+      FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "]\n\n\n")
+    ENDIF()
+
+    FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "fullLibInfo[\"${PROJECT_NAME}\"] = [\n")
+    FOREACH(OSG_DEP ${DEP_OSG_LIST})
+      FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "\"${OSG_DEP}\",")
+    ENDFOREACH()
+    FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "]\n\n\n")
 
 ENDFUNCTION(OSG_SETUP_LIBRARY_BUILD)
 
@@ -1167,25 +1296,36 @@ FUNCTION(OSG_SETUP_TEST_BUILD)
         INCLUDE_DIRECTORIES(${${OSGTESTDEP}_INC})
     ENDFOREACH(OSGTESTDEP)
 
+    # dependencies - global
+    FOREACH(INCDIR ${OSG_GLOBAL_DEP_INCDIR})
+        OSG_MSG("  (global) - include dir ${INCDIR} = ${${INCDIR}}")
+        INCLUDE_DIRECTORIES(${${INCDIR}})
+    ENDFOREACH(INCDIR)
+
+    FOREACH(LIBDIR ${OSG_GLOBAL_DEP_LIBDIR})
+        OSG_MSG("  (global) - library dir ${LIBDIR} = ${${LIBDIR}}")
+        LINK_DIRECTORIES(${${LIBDIR}})
+    ENDFOREACH(LIBDIR)
+
     # dependencies - External
     FOREACH(INCDIR ${${PROJECT_NAME}_DEP_INCDIR})
-        OSG_MSG("  include dir ${INCDIR} = ${${INCDIR}}")
+        OSG_MSG("  (external) - include dir ${INCDIR} = ${${INCDIR}}")
         INCLUDE_DIRECTORIES(${${INCDIR}})
     ENDFOREACH(INCDIR)
 
     FOREACH(LIBDIR ${${PROJECT_NAME}_DEP_LIBDIR})
-        OSG_MSG("  library dir ${LIBDIR} = ${${LIBDIR}}")
+        OSG_MSG("  (external) - library dir ${LIBDIR} = ${${LIBDIR}}")
         LINK_DIRECTORIES(${${LIBDIR}})
     ENDFOREACH(LIBDIR)
 
     # dependencies - test External
     FOREACH(INCDIR ${${PROJECT_NAME}_DEP_TEST_INCDIR})
-        OSG_MSG("  test - include dir ${INCDIR} = ${${INCDIR}}")
+        OSG_MSG("  (test) - include dir ${INCDIR} = ${${INCDIR}}")
         INCLUDE_DIRECTORIES(${${INCDIR}})
     ENDFOREACH(INCDIR)
 
     FOREACH(LIBDIR ${${PROJECT_NAME}_DEP_TEST_LIBDIR})
-        OSG_MSG("  test - library dir ${LIBDIR} = ${${LIBDIR}}")
+        OSG_MSG("  (test) - library dir ${LIBDIR} = ${${LIBDIR}}")
         LINK_DIRECTORIES(${${LIBDIR}})
     ENDFOREACH(LIBDIR)
 
@@ -1220,7 +1360,7 @@ FUNCTION(OSG_SETUP_TEST_BUILD)
         ENDFOREACH(OSGTESTDEP)
 
         FOREACH(LIB ${${PROJECT_NAME}_DEP_TEST_LIB})
-            OSG_MSG("  test - library ${LIB} = ${${LIB}}")
+            OSG_MSG("  (test) - library ${LIB} = ${${LIB}}")
             TARGET_LINK_LIBRARIES(${EXE} ${${LIB}})
         ENDFOREACH(LIB)
 
@@ -1229,7 +1369,7 @@ FUNCTION(OSG_SETUP_TEST_BUILD)
         ENDIF(NOT ${PROJECT_NAME}_NO_LIB)
 
         IF(${PROJECT_NAME}_DEP_DEFS)
-            OSG_MSG("  definitions ${PROJECT_NAME}_DEP_DEFS = ${${PROJECT_NAME}_DEP_DEFS}")
+            OSG_MSG("  (external) - definitions ${PROJECT_NAME}_DEP_DEFS = ${${PROJECT_NAME}_DEP_DEFS}")
             SET_PROPERTY(TARGET ${EXE} APPEND
                 PROPERTY COMPILE_DEFINITIONS ${${PROJECT_NAME}_DEP_DEFS})
         ENDIF(${PROJECT_NAME}_DEP_DEFS)
@@ -1240,7 +1380,7 @@ FUNCTION(OSG_SETUP_TEST_BUILD)
         ENDIF(${PROJECT_NAME}_CXXFLAGS)
 
         IF(${PROJECT_NAME}_DEP_TEST_DEFS)
-            OSG_MSG("  test - definitions ${PROJECT_NAME}_DEP_TEST_DEFS = ${${PROJECT_NAME}_DEP_TEST_DEFS}")
+            OSG_MSG("  (test) - definitions ${PROJECT_NAME}_DEP_TEST_DEFS = ${${PROJECT_NAME}_DEP_TEST_DEFS}")
             SET_PROPERTY(TARGET ${EXE} APPEND
                 PROPERTY COMPILE_DEFINITIONS ${${PROJECT_NAME}_DEP_TEST_DEFS})
         ENDIF(${PROJECT_NAME}_DEP_TEST_DEFS)
@@ -1297,14 +1437,25 @@ FUNCTION(OSG_SETUP_UNITTEST_BUILD)
         INCLUDE_DIRECTORIES(${${OSGDEP}_INC})
     ENDFOREACH(OSGDEP)
 
+    # dependencies global
+    FOREACH(INCDIR ${OSG_GLOBAL_DEP_INCDIR})
+        OSG_MSG("  (global) - include dir ${INCDIR} = ${${INCDIR}}")
+        INCLUDE_DIRECTORIES(${${INCDIR}})
+    ENDFOREACH(INCDIR)
+
+    FOREACH(LIBDIR ${OSG_GLOBAL_DEP_LIBDIR})
+        OSG_MSG("  (global) - library dir ${LIBDIR} = ${${LIBDIR}}")
+        LINK_DIRECTORIES(${${LIBDIR}})
+    ENDFOREACH(LIBDIR)
+
     # dependencies - unittest External
     FOREACH(INCDIR ${${PROJECT_NAME}_DEP_UNITTEST_INCDIR})
-        OSG_MSG("  unittest - include dir ${INCDIR} = ${${INCDIR}}")
+        OSG_MSG("  (unittest) - include dir ${INCDIR} = ${${INCDIR}}")
         INCLUDE_DIRECTORIES(${${INCDIR}})
     ENDFOREACH(INCDIR)
 
     FOREACH(LIBDIR ${${PROJECT_NAME}_DEP_UNITTEST_LIBDIR})
-        OSG_MSG("  unittest - library dir ${LIBDIR} = ${${LIBDIR}}")
+        OSG_MSG("  (unittest) - library dir ${LIBDIR} = ${${LIBDIR}}")
         LINK_DIRECTORIES(${${LIBDIR}})
     ENDFOREACH(LIBDIR)
 
@@ -1330,7 +1481,7 @@ FUNCTION(OSG_SETUP_UNITTEST_BUILD)
     ENDFOREACH(OSGDEP)
 
     FOREACH(LIB ${${PROJECT_NAME}_DEP_UNITTEST_LIB})
-        OSG_MSG("  unittest - library ${LIB} = ${${LIB}}")
+        OSG_MSG("  (unittest) - library ${LIB} = ${${LIB}}")
         TARGET_LINK_LIBRARIES("UnitTest${PROJECT_NAME}" ${${LIB}})
     ENDFOREACH(LIB)
 
@@ -1339,6 +1490,536 @@ FUNCTION(OSG_SETUP_UNITTEST_BUILD)
 
 ENDFUNCTION(OSG_SETUP_UNITTEST_BUILD)
 
+#############################################################################
+# perform default actions for pass OSGPYTHON
+
+FUNCTION(OSG_SETUP_PYTHON_BUILD)
+
+  IF(${PROJECT_NAME}_NO_PYTHON)
+      RETURN()
+  ENDIF(${PROJECT_NAME}_NO_PYTHON)
+
+  MESSAGE("  setup python for ${PROJECT_NAME}")
+
+  ##################################
+  # Dependency includes
+  ##################################
+
+  OSG_GET_ALL_DEP_OSG_LIB("${${PROJECT_NAME}_DEP_OSG_LIB}" DEP_OSG_LIST DEP_MISSING_LIST)
+
+  # read file lists
+  FOREACH(OSGDEP ${DEP_OSG_LIST})
+    OSG_CHECKED_INCLUDE(${CMAKE_BINARY_DIR}/${OSGDEP}.cmake)
+  ENDFOREACH()
+
+  OSG_CHECKED_INCLUDE(${${PROJECT_NAME}_BUILD_FILE})
+
+
+  ##################################
+  # Configure files
+  ##################################
+
+  FILE(MAKE_DIRECTORY ${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR})
+
+  SET(_OSG_GEN_INIT_FILE_OUT "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/__init__.py")
+
+  IF(OSG_CAN_REGEN_PYTHON_BINDINGS)
+
+    SET(_OSG_GEN_CONFIG_FILE_IN  "${CMAKE_SOURCE_DIR}/Bindings/Python/osgGenBindings.py.in")
+    SET(_OSG_GEN_CONFIG_FILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/osgGenBindings_${PROJECT_NAME}.py")
+    SET(_OSG_GEN_SETUP_FILE_IN   "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/osgSetupBindings_${PROJECT_NAME}.py.in")
+    SET(_OSG_GEN_SETUP_FILE      "${CMAKE_CURRENT_BINARY_DIR}/osgSetupBindings_${PROJECT_NAME}.py")
+
+    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/__init__.py.in")
+      SET(_OSG_GEN_INIT_FILE_IN  "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/__init__.py.in")
+    ELSE()
+      SET(_OSG_GEN_INIT_FILE_IN  "${CMAKE_SOURCE_DIR}/Bindings/Python/__init__.py.in")
+    ENDIF()
+
+    IF(OSGBUILD_PYTHON_DUMP_DECLS)
+      SET(OSG_DO_DUMP_PYTHON_DECLS True)
+    ELSE()
+      SET(OSG_DO_DUMP_PYTHON_DECLS False)
+    ENDIF()
+
+    CONFIGURE_FILE("${_OSG_GEN_CONFIG_FILE_IN}"
+                   "${_OSG_GEN_CONFIG_FILE_OUT}")
+
+    CONFIGURE_FILE("${_OSG_GEN_INIT_FILE_IN}"
+                   "${_OSG_GEN_INIT_FILE_OUT}")
+
+    ##################################
+    # Setup File Base
+    ##################################
+
+    IF(EXISTS ${_OSG_GEN_SETUP_FILE_IN})
+      CONFIGURE_FILE("${_OSG_GEN_SETUP_FILE_IN}"
+                     "${_OSG_GEN_SETUP_FILE}")
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "\n\n###############################\n")
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "#auto setup for python bindings\n\n")
+    ELSE()
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${CMAKE_SOURCE_DIR}/Bindings/Python/osgDefaultGen.py"
+                "${_OSG_GEN_SETUP_FILE}")
+    ENDIF()
+
+
+    ##################################
+    # Setup File ModuleHeader
+    ##################################
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleHeaders = \\\n[\n")
+
+    LIST(INSERT ${PROJECT_NAME}_PYTHON_BIND_HEADERS 0 "pypp_aliases.h")
+    LIST(INSERT ${PROJECT_NAME}_PYTHON_BIND_HEADERS 0 "PreBoostPython.h")
+
+    FOREACH(_OSG_HEADER ${${PROJECT_NAME}_PYTHON_BIND_HEADERS})
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_HEADER}\",\n")
+    ENDFOREACH()
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+
+    ##################################
+    # Setup File ModuleFCs
+    ##################################
+
+    IF(${PROJECT_NAME}_PYTHON_BIND_FCS)
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleFCs = \\\n[\n")
+
+      FOREACH(_OSG_FC ${${PROJECT_NAME}_PYTHON_BIND_FCS})
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_FC}\",\n")
+      ENDFOREACH()
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleFCDFiles = None\n\n\n")
+    ELSE()
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleFCs = None\n\n\n")
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleFCDFiles = \\\n[\n")
+
+      FOREACH(_OSG_FC ${${PROJECT_NAME}_FCD})
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_FC}\",\n")
+      ENDFOREACH()
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+    ENDIF()
+
+    ##################################
+    # Setup File ModuleIncludes
+    ##################################
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleIncludes = \\\n[\n")
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${PYTHON_INCLUDE_PATH}\",\n")
+
+    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/Wrapper")
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/Wrapper\",\n")
+    ENDIF()
+    IF(EXISTS "${CMAKE_SOURCE_DIR}/Bindings/Python/Common")
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${CMAKE_SOURCE_DIR}/Bindings/Python/Common\",\n")
+    ENDIF()
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${CMAKE_BINARY_DIR}/Source/Base/Base\",\n")
+
+    FOREACH(_OSG_INC ${${PROJECT_NAME}_INC})
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_INC}\",\n")
+    ENDFOREACH()
+
+    FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+
+    ##################################
+    # Setup File ModuleDepIncludes
+    ##################################
+
+    IF(DEP_OSG_LIST)
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleDepIncludes = \\\n[\n")
+
+      FOREACH(OSGDEP ${DEP_OSG_LIST})
+        FOREACH(_OSG_INC ${${OSGDEP}_INC})
+          FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_INC}\",\n")
+        ENDFOREACH()
+      ENDFOREACH()
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+    ELSE()
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleDepIncludes = None\n\n\n")
+    ENDIF()
+
+    ##################################
+    # Setup File PythonModuleDeps
+    ##################################
+
+    IF(DEP_OSG_LIST)
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleDepencies = \\\n[\n")
+
+      FOREACH(OSGDEP ${DEP_OSG_LIST})
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${OSG_PYTHON_${OSGDEP}_MODULE_DIR}/generated\",\n")
+      ENDFOREACH()
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+    ELSE()
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "moduleDepencies = None\n\n\n")
+    ENDIF()
+
+    ##################################
+    # Setup File NativeWinDependents
+    ##################################
+
+    IF(${PROJECT_NAME}_PYTHON_NATIVEWINDOW_DEPENDENT)
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "nativeWinDependends = \\\n[\n")
+
+      FOREACH(_OSG_NATIVEWIN_DEP ${${PROJECT_NAME}_PYTHON_NATIVEWINDOW_DEPENDENT})
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "  \"${_OSG_NATIVEWIN_DEP}\",\n")
+      ENDFOREACH()
+
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "]\n\n\n")
+      IF(UNIX AND NOT APPLE)
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "nativeWin = \"XWindow\"\n\n\n")
+      ELSEIF(WIN32)
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "nativeWin = \"WIN32Window\"\n\n\n")
+      ELSEIF(UNIX AND APPLE)
+        FILE(APPEND ${_OSG_GEN_SETUP_FILE} "nativeWin = \"CocoaWindow\"\n\n\n")
+      ENDIF()
+    ELSE()
+      FILE(APPEND ${_OSG_GEN_SETUP_FILE} "nativeWinDependends = None\n\n\n")
+    ENDIF()
+
+
+    ##################################
+    # Bindings Gen Target
+    ##################################
+
+    ADD_CUSTOM_TARGET(${PROJECT_NAME}PyGenOnly COMMAND ${PYTHON_EXECUTABLE} osgGenBindings_${PROJECT_NAME}.py)
+    ADD_CUSTOM_TARGET(${PROJECT_NAME}PyGen     COMMAND ${PYTHON_EXECUTABLE} osgGenBindings_${PROJECT_NAME}.py)
+
+
+    FOREACH(OSG_DEP ${${PROJECT_NAME}_DEP_OSG_LIB})
+      ADD_DEPENDENCIES(${PROJECT_NAME}PyGen ${OSG_DEP}PyGen)
+    ENDFOREACH()
+
+    ADD_DEPENDENCIES(OSGPyGen   ${PROJECT_NAME}PyGen)
+
+  ENDIF(OSG_CAN_REGEN_PYTHON_BINDINGS)
+
+  ##################################
+  # Bindings Lib Target
+  ##################################
+
+  IF(EXISTS "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated" AND NOT ${PROJECT_NAME}_PYTHON_GET_ONLY)
+    FILE(GLOB   _OSG_BIND_SRC "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/*.pypp.cpp")
+    LIST(APPEND _OSG_BIND_SRC "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/${PROJECT_NAME}Py.main.cpp")
+
+    FILE(GLOB   _OSG_BIND_SRC_TMP "${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/Wrapper/*.cpp")
+
+    LIST(APPEND _OSG_BIND_SRC ${_OSG_BIND_SRC_TMP})
+
+    IF(${PROJECT_NAME}_PYTHON_NATIVEWINDOW_DEPENDENT)
+
+      FOREACH(_OSG_NATIVEWIN_DEP ${${PROJECT_NAME}_PYTHON_NATIVEWINDOW_DEPENDENT})
+        SET(_OSG_NATIVEWIN_DEP_IN      ${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/${_OSG_NATIVEWIN_DEP}Base.pypp.cpp)
+        SET(_OSG_NATIVEWIN_DEP_PATCHED ${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/${_OSG_NATIVEWIN_DEP}Base.pypp.cpp.patched)
+        SET(_OSG_NATIVEWIN_DEP_OUT     ${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/${_OSG_NATIVEWIN_DEP}Base.pypp.patched.cpp)
+
+        LIST(REMOVE_ITEM _OSG_BIND_SRC ${_OSG_NATIVEWIN_DEP_IN})
+        LIST(REMOVE_ITEM _OSG_BIND_SRC ${_OSG_NATIVEWIN_DEP_OUT})
+
+        IF(EXISTS ${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/generated/${_OSG_NATIVEWIN_DEP}Base.pypp.patched.cpp)
+          LIST(APPEND      _OSG_BIND_SRC ${_OSG_NATIVEWIN_DEP_OUT})
+        ENDIF()
+
+      ENDFOREACH()
+      
+    ENDIF(${PROJECT_NAME}_PYTHON_NATIVEWINDOW_DEPENDENT)
+
+
+    ADD_LIBRARY(${PROJECT_NAME}Py EXCLUDE_FROM_ALL ${_OSG_BIND_SRC})
+
+    SET_TARGET_PROPERTIES(${PROJECT_NAME}Py PROPERTIES PREFIX "")
+
+    IF(WIN32)
+
+        SET_TARGET_PROPERTIES(${PROJECT_NAME}Py PROPERTIES
+            VERSION              ${OSG_VERSION}
+            SOVERSION            ${OSG_VERSION}
+            SUFFIX               ".pyd")
+
+    ENDIF(WIN32)
+
+
+    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/Bindings/Python/Common)
+    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/Bindings/Python/Wrapper)
+    INCLUDE_DIRECTORIES(${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR})
+
+    ADD_DEFINITIONS(-DBOOST_PYTHON_MAX_ARITY=21)
+
+    FOREACH(OSGDEP ${DEP_OSG_LIST})
+      INCLUDE_DIRECTORIES(${${OSGDEP}_INC})
+    ENDFOREACH()
+
+    INCLUDE_DIRECTORIES(${${PROJECT_NAME}_INC})
+    INCLUDE_DIRECTORIES(${OSG_BOOST_INCDIRS})
+
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}Py ${PROJECT_NAME})
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}Py ${OSG_BOOST_PYTHON_LIBS})
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME}Py ${PYTHON_LIBRARY})
+
+    IF(WIN32) 
+
+      IF(OSG_INSTALL_SUBDIR)
+          SET(_OSG_ISC "${OSG_INSTALL_SUBDIR}/")
+      ELSE(OSG_INSTALL_SUBDIR)
+          SET(_OSG_ISC "")
+      ENDIF(OSG_INSTALL_SUBDIR)
+
+      SET(_OSG_TARGET_BINDIR_REL   bin/${_OSG_ISC}rel)
+      SET(_OSG_TARGET_BINDIR_DBG   bin/${_OSG_ISC}debug)
+      SET(_OSG_TARGET_BINDIR_RELNO bin/${_OSG_ISC}relnoopt)
+      SET(_OSG_TARGET_BINDIR_DBGO  bin/${_OSG_ISC}debugopt)
+
+      SET(_OSG_TARGET_LIBDIR_REL   lib/${_OSG_ISC}rel)
+      SET(_OSG_TARGET_LIBDIR_DBG   lib/${_OSG_ISC}debug)
+      SET(_OSG_TARGET_LIBDIR_RELNO lib/${_OSG_ISC}relnoopt)
+      SET(_OSG_TARGET_LIBDIR_DBGO  lib/${_OSG_ISC}debugopt)
+
+      SET(_OSG_TARGET_PYLIBDIR_REL   lib/python/${_OSG_ISC}rel/osg2/${PROJECT_NAME})
+      SET(_OSG_TARGET_PYLIBDIR_DBG   lib/python/${_OSG_ISC}debug/osg2/${PROJECT_NAME})
+      SET(_OSG_TARGET_PYLIBDIR_RELNO lib/python/${_OSG_ISC}relnoopt/osg2/${PROJECT_NAME})
+      SET(_OSG_TARGET_PYLIBDIR_DBGO  lib/python/${_OSG_ISC}debugopt/osg2/${PROJECT_NAME})
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS Release
+              RUNTIME DESTINATION ${_OSG_TARGET_PYLIBDIR_REL}
+              COMPONENT release_runtimes)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS Release
+              LIBRARY DESTINATION ${_OSG_TARGET_LIBDIR_REL}
+              ARCHIVE DESTINATION ${_OSG_TARGET_LIBDIR_REL}
+              COMPONENT release_libraries)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS Debug
+              RUNTIME DESTINATION ${_OSG_TARGET_PYLIBDIR_DBG}
+              COMPONENT debug_runtimes)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS Debug
+              LIBRARY DESTINATION ${_OSG_TARGET_LIBDIR_DBG}
+              ARCHIVE DESTINATION ${_OSG_TARGET_LIBDIR_DBG}
+              COMPONENT debug_libraries)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS ReleaseNoOpt
+              RUNTIME DESTINATION ${_OSG_TARGET_PYLIBDIR_RELNO}
+              COMPONENT release_no_opt_runtimes)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS ReleaseNoOpt
+              LIBRARY DESTINATION ${_OSG_TARGET_LIBDIR_RELNO}
+              ARCHIVE DESTINATION ${_OSG_TARGET_LIBDIR_RELNO}
+              COMPONENT release_no_opt_libraries)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS DebugOpt
+              RUNTIME DESTINATION ${_OSG_TARGET_PYLIBDIR_DBGO}
+              COMPONENT debug_opt_runtimes)
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              CONFIGURATIONS DebugOpt
+              LIBRARY DESTINATION ${_OSG_TARGET_LIBDIR_DBGO}
+              ARCHIVE DESTINATION ${_OSG_TARGET_LIBDIR_DBGO}
+              COMPONENT debug_opt_libraries)
+
+
+      IF(OSG_INSTALL_PDB_FILES)
+
+        GET_TARGET_PROPERTY(_TMPVAL ${PROJECT_NAME}Py Release_LOCATION)
+
+        STRING(REPLACE "dll" "pdb" _TMPVAL1 ${_TMPVAL})
+
+        INSTALL(FILES ${_TMPVAL1}
+                CONFIGURATIONS Release
+                DESTINATION ${_OSG_TARGET_PYLIBDIR_REL}
+                COMPONENT release_program_db)
+
+
+        GET_TARGET_PROPERTY(_TMPVAL ${PROJECT_NAME}Py Debug_LOCATION)
+
+        STRING(REPLACE "dll" "pdb" _TMPVAL1 ${_TMPVAL})
+
+        INSTALL(FILES ${_TMPVAL1}
+                CONFIGURATIONS Debug
+                DESTINATION ${_OSG_TARGET_PYLIBDIR_DBG}
+                COMPONENT debug_program_db)
+
+
+        GET_TARGET_PROPERTY(_TMPVAL ${PROJECT_NAME}Py ReleaseNoOpt_LOCATION)
+
+        STRING(REPLACE "dll" "pdb" _TMPVAL1 ${_TMPVAL})
+
+        INSTALL(FILES ${_TMPVAL1}
+                CONFIGURATIONS ReleaseNoOpt
+                DESTINATION ${_OSG_TARGET_PYLIBDIR_RELNO}
+                COMPONENT release_no_opt_program_db)
+
+
+        GET_TARGET_PROPERTY(_TMPVAL ${PROJECT_NAME}Py DebugOpt_LOCATION)
+
+        STRING(REPLACE "dll" "pdb" _TMPVAL1 ${_TMPVAL})
+
+        INSTALL(FILES ${_TMPVAL1}
+                CONFIGURATIONS DebugOpt
+                DESTINATION ${_OSG_TARGET_PYLIBDIR_DBGO}
+                COMPONENT debug_opt_program_db)
+
+      ENDIF(OSG_INSTALL_PDB_FILES)
+
+      SET(_OSG_GEN_INIT_FILE_OUT "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/__init__.py")
+
+      INSTALL(FILES          ${_OSG_GEN_INIT_FILE_OUT} 
+              DESTINATION    ${_OSG_TARGET_PYLIBDIR_REL}
+              CONFIGURATIONS Release)
+
+      SET(_OSG_GEN_INIT_FILE_OUT "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/__init__.py")
+  
+      INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+              DESTINATION ${_OSG_TARGET_PYLIBDIR_DBG}
+              CONFIGURATIONS Debug)
+
+      SET(_OSG_GEN_INIT_FILE_OUT "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/__init__.py")
+  
+      INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+              DESTINATION ${_OSG_TARGET_PYLIBDIR_DBGO}
+              CONFIGURATIONS DebugOpt)
+
+      SET(_OSG_GEN_INIT_FILE_OUT "${OSG_PYTHON_${PROJECT_NAME}_MODULE_DIR}/__init__.py")
+  
+      INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+              DESTINATION ${_OSG_TARGET_PYLIBDIR_RELNO}
+              CONFIGURATIONS ReleaseNoOpt)
+
+
+    ELSE(WIN32)   
+      GET_FILENAME_COMPONENT(_PY_VERSION_DIR ${PYTHON_INCLUDE_PATH} NAME)
+
+      SET(_OSG_PY_INST_BASE 
+          "lib${OSG_LIBDIR_BASE_SUFFIX}/${_PY_VERSION_DIR}/site-packages/${OSG_LIBDIR_BUILD_TYPE_SUFFIX}/osg2/${PROJECT_NAME}")
+
+      INSTALL(TARGETS ${PROJECT_NAME}Py
+              RUNTIME DESTINATION ${_OSG_PY_INST_BASE}
+              LIBRARY DESTINATION ${_OSG_PY_INST_BASE}
+              ARCHIVE DESTINATION ${_OSG_PY_INST_BASE}
+              COMPONENT libraries
+              OPTIONAL)
+
+      INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+              DESTINATION ${_OSG_PY_INST_BASE})
+    ENDIF(WIN32)
+
+    ADD_DEPENDENCIES(OSGPy      ${PROJECT_NAME}Py)
+  ENDIF()
+
+ENDFUNCTION(OSG_SETUP_PYTHON_BUILD)
+
+#############################################################################
+# perform default actions for pass OSGDOXYDOC
+
+FUNCTION(OSG_SETUP_SEPARATE_LIBS_DOXYDOC)
+    IF(NOT ${OSG_CMAKE_PASS} STREQUAL "OSGDOXYDOC")
+        RETURN()
+    ENDIF()
+
+    IF(${PROJECT_NAME}_NO_DOC)
+        RETURN()
+    ENDIF(${PROJECT_NAME}_NO_DOC)
+
+    # set up variables for the config file
+    SET(OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE_IN "${CMAKE_SOURCE_DIR}/Doc/opensg-doxy.in")
+    SET(OSG_${PROJECT_NAME}_DOC_DIRECTORY              "${OSG_DOXY_HTML_DIR}/${PROJECT_NAME}")
+    SET(OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE    "${CMAKE_BINARY_DIR}/Doc/${PROJECT_NAME}-doxy")
+
+    SET(OSG_${PROJECT_NAME}_DEP_DOXY_TAGFILES"")
+    SET(OSG_${PROJECT_NAME}_DOXY_TAGFILE     "${CMAKE_BINARY_DIR}/Doc/${PROJECT_NAME}_DOXYGEN_TAGS")
+    SET(OSG_${PROJECT_NAME}_DEP_DOCS         "")
+
+    # dependencies - OpenSG
+    OSG_GET_ALL_DEP_OSG_LIB("${${PROJECT_NAME}_DEP_OSG_LIB}" DEP_OSG_LIST DEP_MISSING_LIST)
+
+    FOREACH(OSGDEP ${DEP_OSG_LIST})
+        SET(OSG_${PROJECT_NAME}_DEP_DOXY_TAGFILES "${OSG_${PROJECT_NAME}_DEP_DOXY_TAGFILES} ./${OSGDEP}_DOXYGEN_TAGS=../../${OSGDEP}/html")
+        LIST(APPEND OSG_${PROJECT_NAME}_DEP_DOCS "${OSGDEP}Doc")
+    ENDFOREACH()
+
+    IF(EXISTS "${CMAKE_BINARY_DIR}/Doc/Include/${PROJECT_NAME}.include")
+      SET(OSG_DOC_BASIC_INPUT "${CMAKE_BINARY_DIR}/Doc/Include/${PROJECT_NAME}.include")
+    ENDIF()
+
+    # write doxygen config file
+    CONFIGURE_FILE("${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE_IN}"
+                   "${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}")
+
+    SET(OSG_DOC_BASIC_INPUT "${CMAKE_BINARY_DIR}/Doc/Include/OSGDummy.include")
+
+    IF(DOXYGEN_EXECUTABLE)
+        #ADD_CUSTOM_TARGET(DocUpload COMMAND unison -batch -ui text opensg_doc)
+        #ADD_DEPENDENCIES(DocUpload Doc)
+
+        SET(OSG_DOC_PIPES "")
+
+        IF(OSG_DOXY_STDOUT_LOG)
+          SET(OSG_DOC_PIPES > ${OSG_DOXY_STDOUT_LOG}.${PROJECT_NAME})
+        ENDIF(OSG_DOXY_STDOUT_LOG)
+
+        ADD_CUSTOM_TARGET(${PROJECT_NAME}DocOnly
+            VERBATIM
+            COMMAND ${DOXYGEN_EXECUTABLE} ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE} ${OSG_DOC_PIPES}
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Doc")
+
+        ADD_CUSTOM_TARGET(${PROJECT_NAME}Doc
+            VERBATIM
+            COMMAND ${DOXYGEN_EXECUTABLE} ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE} ${OSG_DOC_PIPES}
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Doc")
+
+        FOREACH(OSGDEPDOC ${OSG_${PROJECT_NAME}_DEP_DOCS})
+            ADD_DEPENDENCIES(${PROJECT_NAME}Doc ${OSGDEPDOC})
+        ENDFOREACH()
+
+        ADD_DEPENDENCIES(Doc ${PROJECT_NAME}Doc)
+    ENDIF()
+
+    INCLUDE(${${PROJECT_NAME}_BUILD_FILE})
+
+
+
+#    FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}
+#        "#############################################################################\n")
+
+#    IF(${PROJECT_NAME}_DOXY_EXTRA_INC)
+#        FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}
+#            "# doc input files for ${PROJECT_NAME}\n\n")
+
+#        FOREACH(DOXYFILE ${${PROJECT_NAME}_DOXY_EXTRA_INC})
+#            FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}
+#                "INPUT += ${DOXYFILE}\n")
+#        ENDFOREACH()
+
+#        FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE} "\n")
+#    ENDIF()
+
+    FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}
+        "# source code input files for ${PROJECT_NAME}\n\n")
+
+    FOREACH(INCDIR ${${PROJECT_NAME}_INC})
+        FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE}
+            "INPUT += ${INCDIR}\n")
+    ENDFOREACH()
+
+    FILE(APPEND ${OSG_${PROJECT_NAME}_DOXY_CONFIGURATION_FILE} "\n")
+
+ENDFUNCTION(OSG_SETUP_SEPARATE_LIBS_DOXYDOC)
 
 #############################################################################
 # perform default actions for pass OSGDOXYDOC
@@ -1347,6 +2028,11 @@ FUNCTION(OSG_SETUP_DOXYDOC)
     IF(NOT ${OSG_CMAKE_PASS} STREQUAL "OSGDOXYDOC")
         RETURN()
     ENDIF(NOT ${OSG_CMAKE_PASS} STREQUAL "OSGDOXYDOC")
+
+    IF(${PROJECT_NAME}_NO_DOC)
+        RETURN()
+    ENDIF(${PROJECT_NAME}_NO_DOC)
+
 
     INCLUDE(${${PROJECT_NAME}_BUILD_FILE})
 
@@ -1385,7 +2071,14 @@ FUNCTION(OSG_SETUP_PROJECT PROJ_DEFINE)
         OSG_SETUP_UNITTEST_BUILD()
 
     ELSEIF(OSG_CMAKE_PASS STREQUAL "OSGDOXYDOC")
-        OSG_SETUP_DOXYDOC()
+        IF(OSG_GENERATE_SEPARATE_LIB_DOC)
+            OSG_SETUP_SEPARATE_LIBS_DOXYDOC()
+        ELSE()
+            OSG_SETUP_DOXYDOC()
+        ENDIF()
+
+    ELSEIF(OSG_CMAKE_PASS STREQUAL "OSGPYTHON")
+      OSG_SETUP_PYTHON_BUILD()
 
     ENDIF(OSG_CMAKE_PASS STREQUAL "OSGSETUP")
 
@@ -1509,6 +2202,14 @@ MACRO(OSG_BOOST_DEP_SETUP)
           FIND_PACKAGE(Boost COMPONENTS system)
         ENDIF(${Boost_MINOR_VERSION} GREATER 34)
 
+        IF(PYTHON_INCLUDE_PATH AND PYTHON_LIBRARY)
+          FIND_PACKAGE(Boost COMPONENTS python)
+        ENDIF(PYTHON_INCLUDE_PATH AND PYTHON_LIBRARY)
+
+        # We ignore if boost python fails, we catch that somewhere else
+        # so if we get here Boost_FOUND was true in the first place
+        SET(Boost_FOUND TRUE)
+
         # Hide settings
         SET(Boost_FILESYSTEM_LIBRARY ${Boost_FILESYSTEM_LIBRARY}
                                      CACHE INTERNAL "")
@@ -1517,6 +2218,23 @@ MACRO(OSG_BOOST_DEP_SETUP)
         SET(Boost_FILESYSTEM_LIBRARY_RELEASE
            ${Boost_FILESYSTEM_LIBRARY_RELEASE}
            CACHE INTERNAL "")
+
+        SET(Boost_SYSTEM_LIBRARY ${Boost_SYSTEM_LIBRARY}
+                               CACHE INTERNAL "")
+        SET(Boost_SYSTEM_LIBRARY_DEBUG ${Boost_SYSTEM_LIBRARY_DEBUG}
+                                       CACHE INTERNAL "")
+        SET(Boost_SYSTEM_LIBRARY_RELEASE
+           ${Boost_SYSTEM_LIBRARY_RELEASE}
+           CACHE INTERNAL "")
+
+        SET(Boost_PYTHON_LIBRARY ${Boost_PYTHON_LIBRARY}
+                                     CACHE INTERNAL "")
+        SET(Boost_PYTHON_LIBRARY_DEBUG ${Boost_PYTHON_LIBRARY_DEBUG}
+                                           CACHE INTERNAL "")
+        SET(Boost_PYTHON_LIBRARY_RELEASE
+           ${Boost_PYTHON_LIBRARY_RELEASE}
+           CACHE INTERNAL "")
+
 
         SET(Boost_INCLUDE_DIR ${Boost_INCLUDE_DIR}
                               CACHE INTERNAL "")
@@ -1548,6 +2266,8 @@ MACRO(OSG_BOOST_DEP_SETUP)
             SET(OSG_BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY_DEBUG})
           ENDIF(${Boost_MINOR_VERSION} GREATER 34)
 
+          SET(OSG_BOOST_PYTHON_LIBS ${Boost_PYTHON_LIBRARY_DEBUG})
+
         ELSE()
 
           IF(${Boost_MINOR_VERSION} GREATER 34)
@@ -1556,6 +2276,8 @@ MACRO(OSG_BOOST_DEP_SETUP)
           ELSE()
             SET(OSG_BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY_RELEASE})
           ENDIF(${Boost_MINOR_VERSION} GREATER 34)
+
+          SET(OSG_BOOST_PYTHON_LIBS ${Boost_PYTHON_LIBRARY_RELEASE})
 
         ENDIF()
 

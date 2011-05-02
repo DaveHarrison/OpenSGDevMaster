@@ -44,8 +44,6 @@
 
 #include "OSGConfig.h"
 
-#ifndef OSG_EMBEDDED
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include "OSGGL.h"
 #endif
@@ -179,6 +177,10 @@ typedef void  (OSG_APIENTRY *
                           OSGglProgramParameteriEXTProc  )(      GLuint, 
                                                                  GLenum, 
                                                                  GLint      );
+
+typedef void  (OSG_APIENTRY * OSGglBindAttribLocationProc)(      GLuint, 
+                                                                 GLuint, 
+                                                           const GLchar *   );
 
 /*! \}                                                                       */
 #endif
@@ -343,8 +345,9 @@ typedef void (OSG_APIENTRY *OSGglGenBuffersARB   )(      GLsizei        n,
 typedef void (OSG_APIENTRY *OSGglDeleteBuffersARB)(      GLsizei        n, 
                                                    const GLuint        *bufs);
 
-typedef void *(OSG_APIENTRY * OSGglMapBufferARB)(GLenum target, GLenum access);
-typedef GLboolean (OSG_APIENTRY * OSGglUnmapBufferARB)(GLenum target);
+typedef void     *(OSG_APIENTRY *OSGglMapBufferARB  )(GLenum target, 
+                                                      GLenum access);
+typedef GLboolean (OSG_APIENTRY *OSGglUnmapBufferARB)(GLenum target);
 
 typedef void (OSG_APIENTRY *OSGglEnableVertexAttribArrayARB )(GLuint index);
 typedef void (OSG_APIENTRY *OSGglDisableVertexAttribArrayARB)(GLuint index);
@@ -516,7 +519,5 @@ typedef void   (OSG_APIENTRY *OSGglPointParameterfvProc       )(
 
 
 OSG_END_NAMESPACE
-
-#endif /* OSG_EMBEDDED) */
 
 #endif /* _OSGGLFUNCPROTOS_H_ */

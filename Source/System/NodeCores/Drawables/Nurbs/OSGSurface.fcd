@@ -10,10 +10,11 @@
     parentsystemcomponent="true"
     decoratable="false"
     isNodeCore="true"
->
-This is the OpenSG NURBS surface node. It supports an arbitrary number of
-trimming curves. The interface lets you define both rational and nonrational
-surfaces, and you can also vary rational and nonrational trimming curves.
+    docGroupBase="GrpDrawablesNurbs"
+    >
+    This is the OpenSG NURBS surface node. It supports an arbitrary number of
+    trimming curves. The interface lets you define both rational and nonrational
+    surfaces, and you can also vary rational and nonrational trimming curves.
     <Field
         name="dimU"
         type="UInt32"
@@ -21,8 +22,8 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         visibility="external"
         defaultValue="0"
         access="public"
-    >
-    The surface dimension in U
+        >
+        The surface dimension in U
     </Field>
     <Field
         name="dimV"
@@ -31,26 +32,26 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         visibility="external"
         defaultValue="0"
         access="public"
-    >
-    The surface dimension in V
+        >
+        The surface dimension in V
     </Field>
     <Field
         name="knotsU"
-        type="Real"
+        type="Real32"
         cardinality="multi"
         visibility="external"
         access="public"
-    >
-    The surface knots in U direction
+        >
+        The surface knots in U direction
     </Field>
     <Field
         name="knotsV"
-        type="Real"
+        type="Real32"
         cardinality="multi"
         visibility="external"
         access="public"
-    >
-    The surface knots in V direction
+        >
+        The surface knots in V direction
     </Field>
     <Field
         name="controlPoints"
@@ -61,18 +62,18 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         category="childpointer"
         childParentType="FieldContainer"
         linkParentField="Parents"
-    >
-    The control points for the surface
+        >
+        The control points for the surface
     </Field>
     <Field
         name="error"
-        type="Real"
+        type="Real32"
         cardinality="single"
         visibility="external"
         defaultValue="0.5"
         access="public"
-    >
-    The approximation error for the tessellation
+        >
+        The approximation error for the tessellation
     </Field>
     <Field
         name="numCurves"
@@ -81,8 +82,8 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         visibility="external"
         defaultValue="0"
         access="protected"
-    >
-    The number of trimming curves
+        >
+        The number of trimming curves
     </Field>
     <Field
         name="knotLengths"
@@ -90,8 +91,8 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         cardinality="multi"
         visibility="external"
         access="protected"
-    >
-    The knotlengths for the trimming curves
+        >
+        The knotlengths for the trimming curves
     </Field>
     <Field
         name="dimensions"
@@ -99,26 +100,26 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         cardinality="multi"
         visibility="external"
         access="protected"
-    >
-    The dimensions for the trimming curves
+        >
+        The dimensions for the trimming curves
     </Field>
     <Field
         name="curveControlPoints"
-        type="Pnt3r"
+        type="Pnt3f"
         cardinality="multi"
         visibility="external"
         access="protected"
-    >
-    The control points for the trimming curves
+        >
+        The control points for the trimming curves
     </Field>
     <Field
         name="knots"
-        type="Real"
+        type="Real32"
         cardinality="multi"
         visibility="external"
         access="protected"
-    >
-    The knotvectors for the trimming curves
+        >
+        The knotvectors for the trimming curves
     </Field>
     <Field
         name="curvesPerLoop"
@@ -126,8 +127,8 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         cardinality="multi"
         visibility="external"
         access="protected"
-    >
-    Specifies the number of trimming curves in each trimming curve loop
+        >
+        Specifies the number of trimming curves in each trimming curve loop
     </Field>
     <Field
         name="isDelaunay"
@@ -136,11 +137,11 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         visibility="external"
         defaultValue="false"
         access="public"
-    >
-    Whether to use Delaunay triangulation. Default is no, because it's faster
-    and slightly more robust numerically, but produces a somewhat less "nice"
-    triangulation. Set to true, if you want Delaunay triangulation. The number
-    of triangles generated is the same in both modes.
+        >
+        Whether to use Delaunay triangulation. Default is no, because it's faster
+        and slightly more robust numerically, but produces a somewhat less "nice"
+        triangulation. Set to true, if you want Delaunay triangulation. The number
+        of triangles generated is the same in both modes.
     </Field>
     <Field
         name="textureControlPoints"
@@ -151,8 +152,8 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         category="childpointer"
         childParentType="FieldContainer"
         linkParentField="Parents"
-    >
-    The control points for textures (always 2D)
+        >
+        The control points for textures (always 2D)
     </Field>
     <Field
         name="dirtyMask"
@@ -161,7 +162,7 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         visibility="external"
         defaultValue="0"
         access="protected"
-    >
+        >
     </Field>
     <Field
         name="surfaceGLId"
@@ -171,7 +172,7 @@ surfaces, and you can also vary rational and nonrational trimming curves.
         defaultValue="0"
         access="protected"
         fieldFlags="FClusterLocal"
-    >
-    Surface GL Id, internal use.
+        >
+        Surface GL Id, internal use.
     </Field>
 </FieldContainer>

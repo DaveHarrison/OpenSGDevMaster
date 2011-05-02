@@ -285,10 +285,12 @@ void ShaderParameterBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (NameFieldMask & whichField))
     {
+        editSField(NameFieldMask);
         _sfName.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ParentsFieldMask & whichField))
     {
+        editMField(ParentsFieldMask, _mfParents);
         _mfParents.copyFromBin(pMem);
     }
 }
@@ -335,7 +337,7 @@ bool ShaderParameterBase::linkParent(
         {
             editMField(ParentsFieldMask, _mfParents);
 
-            _mfParents.push_back(pParent, childFieldId);
+            _mfParents.push_back(pTypedParent, childFieldId);
 
             return true;
         }
@@ -357,7 +359,7 @@ bool ShaderParameterBase::unlinkParent(
 
         if(pTypedParent != NULL)
         {
-            Int32 iParentIdx = _mfParents.findIndex(pParent);
+            Int32 iParentIdx = _mfParents.findIndex(pTypedParent);
 
             if(iParentIdx != -1)
             {
@@ -368,8 +370,15 @@ bool ShaderParameterBase::unlinkParent(
                 return true;
             }
 
-            FWARNING(("ShaderParameterBase::unlinkParent: "
-                      "Child <-> Parent link inconsistent.\n"));
+            SWARNING << "Child (["          << this
+                     << "] id ["            << this->getId()
+                     << "] type ["          << this->getType().getCName()
+                     << "] parentFieldId [" << parentFieldId
+                     << "]) - Parent (["    << pParent
+                     << "] id ["            << pParent->getId()
+                     << "] type ["          << pParent->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

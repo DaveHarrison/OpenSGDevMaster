@@ -44,15 +44,20 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaInstanceElement.h"
 #include "OSGColladaVisualScene.h"
 #include "OSGColladaElementFactoryHelper.h"
+#include "OSGNode.h"
 
 #include <dom/domVisual_scene.h>
 
 OSG_BEGIN_NAMESPACE
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaInstanceVisualScene
     : public ColladaInstanceElement
@@ -81,8 +86,7 @@ class OSG_FILEIO_DLLMAPPING ColladaInstanceVisualScene
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void            read   (void                  );
-    virtual FieldContainer *process(ColladaElement *parent);
+    virtual void read(ColladaElement *colElemParent);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

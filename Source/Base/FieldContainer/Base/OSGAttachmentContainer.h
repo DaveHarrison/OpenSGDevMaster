@@ -123,11 +123,14 @@ class OSG_BASE_DLLMAPPING AttachmentContainer : public FieldContainer
     /*! \name                      Set                                     */
     /*! \{                                                                 */
 
-    void             addAttachment (Attachment * const pAttachment,
-                                    UInt16             binding    = 0);
+    void             addAttachment         (Attachment * const pAttachment,
+                                            UInt16             binding    = 0);
 
-    void             subAttachment (Attachment * const pAttachment,
-                                    UInt16             binding    = 0);
+    void             subAttachment         (Attachment * const pAttachment,
+                                            UInt16             binding    = 0);
+
+    void             replaceAttachmentByObj(Attachment * const pOld,
+                                            Attachment * const pNew          );
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -352,7 +355,6 @@ void deepCloneAttachments(
 
 OSG_END_NAMESPACE
 
-#include "OSGAttachment.h"
 #include "OSGAttachmentContainer.inl"
 
 #endif /* _OSGATTACHMENTCONTAINER_H_ */

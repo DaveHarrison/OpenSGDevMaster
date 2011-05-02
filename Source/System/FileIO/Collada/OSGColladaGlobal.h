@@ -47,25 +47,43 @@
  */
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGFileIODef.h"
 #include "OSGMemoryObject.h"
 #include "OSGPathHandler.h"
 #include "OSGNode.h"
 #include "OSGColladaElement.h"
+#include "OSGColladaLoaderState.h"
 #include "OSGColladaOptions.h"
 #include "OSGStatElemTypes.h"
 #include "OSGStatCollector.h"
+#include "OSGGlobalsAttachment.h"
 
 // collada dom includes
 #include <dae.h>
 #include <dom/domCOLLADA.h>
 
+#include <deque>
+#include <map>
 #include <string>
 #include <vector>
 
 OSG_BEGIN_NAMESPACE
+
+// forward decl
+class ColladaInstInfo;
+OSG_GEN_MEMOBJPTR(ColladaInstInfo);
+
+
+
+// forward decl
+class ColladaInstInfo;
+OSG_GEN_MEMOBJPTR(ColladaInstInfo);
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaGlobal : public MemoryObject
 {
@@ -80,9 +98,18 @@ class OSG_FILEIO_DLLMAPPING ColladaGlobal : public MemoryObject
 
     OSG_GEN_INTERNAL_MEMOBJPTR(ColladaGlobal);
 
-    typedef std::vector<ColladaElementRefPtr> ElementStore;
-    typedef ElementStore::iterator            ElementStoreIt;
-    typedef ElementStore::const_iterator      ElementStoreConstIt;
+    typedef std::deque<ColladaInstInfoRefPtr>  InstanceQueue;
+    typedef InstanceQueue::iterator            InstanceQueueIt;
+    typedef InstanceQueue::const_iterator      InstanceQueueConstIt;
+
+    typedef std::map<std::string,
+                     ColladaLoaderStateRefPtr> LoaderStateMap;
+    typedef LoaderStateMap::iterator           LoaderStateMapIt;
+    typedef LoaderStateMap::const_iterator     LoaderStateMapConstIt;
+
+    typedef std::vector<ColladaElementRefPtr>  ElementStore;
+    typedef ElementStore::iterator             ElementStoreIt;
+    typedef ElementStore::const_iterator       ElementStoreConstIt;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -124,6 +151,7 @@ class OSG_FILEIO_DLLMAPPING ColladaGlobal : public MemoryObject
 
     inline const DAE          *getDAE       (void                      ) const;
     inline DAE                *editDAE      (void                      );
+    inline domCOLLADA         *getDocRoot   (void                      ) const;
 
     inline const std::string  &getDocPath   (void                      ) const;
     inline void                setDocPath   (const std::string &docPath);
@@ -134,18 +162,36 @@ class OSG_FILEIO_DLLMAPPING ColladaGlobal : public MemoryObject
     inline Node               *getRoot      (void                      ) const;
     inline void                setRoot      (Node              *rootN  );
 
+    inline GlobalsAttachment  *getGlobalsAtt(void                      ) const;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name LoaderState                                                  */
+    /*! \{                                                                 */
+
+    inline void addLoaderState(const std::string  &name,
+                               ColladaLoaderState *state);
+    inline void subLoaderState(const std::string &name  );
+
+    inline ColladaLoaderState *getLoaderState  (const std::string &name) const;
+    template <class StateTypeT>
+    inline StateTypeT         *getLoaderStateAs(const std::string &name) const;
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name ElementStore                                                 */
     /*! \{                                                                 */
 
-    inline const ElementStore &getElemStore (void                      ) const;
-    inline ElementStore       &editElemStore(void                      );
+    inline const InstanceQueue &getInstQueue (void                      ) const;
+    inline InstanceQueue       &editInstQueue(void                      );
 
-           void                addElement   (ColladaElement    *elem   );
+    inline const ElementStore  &getElemStore (void                      ) const;
+    inline ElementStore        &editElemStore(void                      );
 
-           ColladaElement     *getElement   (const daeURI      &elemURI) const;
-           ColladaElement     *getElement   (const std::string &elemId ) const;
+           void                 addElement   (ColladaElement    *elem   );
+
+           ColladaElement      *getElement   (const daeURI      &elemURI) const;
+           ColladaElement      *getElement   (const std::string &elemId ) const;
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
@@ -167,17 +213,21 @@ class OSG_FILEIO_DLLMAPPING ColladaGlobal : public MemoryObject
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
 
-    ElementStore          _elemStore;
+    InstanceQueue              _instQueue;
+    LoaderStateMap             _loaderState;
+    ElementStore               _elemStore;
 
-    ColladaOptionsRefPtr  _options;
-    StatCollectorRefPtr   _statColl;
+    ColladaOptionsRefPtr       _options;
+    StatCollectorRefPtr        _statColl;
 
-    PathHandler           _pathHandler;
-    std::string           _docPath;
+    PathHandler                _pathHandler;
+    std::string                _docPath;
 
-    DAE                  *_dae;
+    domCOLLADARef              _docRoot;
+    DAE                       *_dae;
 
-    NodeUnrecPtr          _rootN;
+    NodeUnrecPtr               _rootN;
+    GlobalsAttachmentUnrecPtr  _globalsAtt;
 };
 
 

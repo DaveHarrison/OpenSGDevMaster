@@ -51,6 +51,9 @@
 #include "OSGNodeCore.h"
 #include "OSGAction.h"
 #include "OSGIntersectAction.h"
+#include "OSGIntersectProxyAttachment.h"
+
+#include <boost/bind.hpp>
 
 OSG_USING_NAMESPACE
 
@@ -201,6 +204,8 @@ IntersectAction::IntersectAction(void) :
 
     if(_defaultLeaveFunctors)
         _leaveFunctors = *_defaultLeaveFunctors;
+
+    _nodeEnterCB = boost::bind(&IntersectAction::onEnterNode, this, _1, _2);
 }
 
 
@@ -306,12 +311,13 @@ Action::ResultE IntersectAction::setEnterLeave(Real32 enter, Real32 leave)
  *  @param obj The Node object that was hit.
  *  @param triIndex The index of the triangle in the geometry hit.
  *  @param normal   The normal at the hit location.
+ *  @param lineIndex The index of the line in the geometry hit.
  */
-void IntersectAction::setHit(Real32  t, 
-                             Node   *obj, 
-                             Int32   triIndex, 
-                             Vec3f  &normal,
-                             Int32   lineIndex)
+void IntersectAction::setHit(      Real32  t, 
+                                   Node   *obj, 
+                                   Int32   triIndex, 
+                             const Vec3f  &normal,
+                                   Int32   lineIndex)
 {
     if(t < 0 || t > _hitT || t > _maxdist)
         return;
@@ -394,4 +400,19 @@ Action::FunctorStore *IntersectAction::getDefaultLeaveFunctors(void)
  -  private                                                                -
 \*-------------------------------------------------------------------------*/
 
+Action::ResultE IntersectAction::onEnterNode(Node* node, Action* action)
+{
+    OSG_ASSERT(this == action && node == _actNode);
 
+    ResultE result = Continue;
+
+    IntersectProxyAttachment* ipa = dynamic_cast<IntersectProxyAttachment*>(
+        node->findAttachment(IntersectProxyAttachment::getClassType()));
+
+    if(ipa != NULL)
+    {
+        result = ipa->intersectEnter(node, this);
+    }
+
+    return result;
+}

@@ -60,6 +60,7 @@
 #include "OSGWindow.h"
 #include "OSGCamera.h"
 #include "OSGForeground.h"
+#include "OSGFrameBufferObject.h"
 
 #include "OSGTraversalValidator.h"
 
@@ -341,17 +342,17 @@ void Viewport::render(RenderActionBase *action)
 
     if(getCamera() == NULL)
     {
-        SWARNING << "Viewport::render: no camera!" << std::endl;
+        SWARNING << "Viewport::render: no Camera, can not render!" << std::endl;
         return;
     }
     if(getBackground() == NULL)
     {
-        SWARNING << "Viewport::render: no Background!" << std::endl;
+        SWARNING << "Viewport::render: no Background, can not render!" << std::endl;
         return;
     }
     if(getRoot() == NULL)
     {
-        SWARNING << "Viewport::render: no root!" << std::endl;
+        SWARNING << "Viewport::render: no root, can not render!" << std::endl;
         return;
     }
 
@@ -378,8 +379,26 @@ void Viewport::render(RenderActionBase *action)
         oEnv.setTileFullSize(getCamera()->tileGetFullSize());
         oEnv.setTileRegion  (getCamera()->tileGetRegion  ());
 
+        oEnv.setDrawerId  (action->getDrawerId  ());
+        oEnv.setDrawableId(action->getDrawableId());
+
         for(UInt16 i=0; i < getMFForegrounds()->size(); i++)
-            getForegrounds(i)->draw(&oEnv, this);
+        {
+            Foreground        *pForeground = getForegrounds(i);
+            FrameBufferObject *pTarget     = this->getTarget();
+
+            if(pTarget != NULL)
+            {
+                pTarget->activate(&oEnv);
+            }
+
+            pForeground->draw(&oEnv, this);
+
+            if(pTarget != NULL)
+            {
+                pTarget->deactivate(&oEnv);
+            }
+        }
     }
     else
     {
@@ -407,7 +426,22 @@ void Viewport::renderForegrounds(Window *pWin)
     oEnv.setTileRegion  (getCamera()->tileGetRegion  ());
 
     for(UInt16 i=0; i < getMFForegrounds()->size(); i++)
-        getForegrounds(i)->draw(&oEnv, this);
+    {
+        Foreground        *pForeground = getForegrounds(i);
+        FrameBufferObject *pTarget     = this->getTarget();
+
+        if(pTarget != NULL)
+        {
+            pTarget->activate(&oEnv);
+        }
+
+        pForeground->draw(&oEnv, this);
+
+        if(pTarget != NULL)
+        {
+            pTarget->deactivate(&oEnv);
+        }
+    }
 }
 
 bool Viewport::isPassive(void)

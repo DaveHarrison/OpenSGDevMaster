@@ -48,7 +48,10 @@ OSG_BEGIN_NAMESPACE
 
 /*! \brief VRMLScalarInterpolator class. See \ref
            PageSystemDynamicsVRMLScalarInterpolator for a description.
-*/
+    \ingroup GrpDynamicsVRMLAnimationObj
+    \ingroup GrpLibOSGDynamics
+    \includebasedoc
+ */
 
 class OSG_DYNAMICS_DLLMAPPING VRMLScalarInterpolator : 
     public VRMLScalarInterpolatorBase
@@ -77,6 +80,13 @@ class OSG_DYNAMICS_DLLMAPPING VRMLScalarInterpolator :
 
     virtual void dump(      UInt32     uiIndent = 0,
                       const BitVector  bvFlags  = 0) const;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Evaluation                                 */
+    /*! \{                                                                 */
+
+    virtual void evaluate(void);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/

@@ -41,12 +41,16 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaElement.h"
 #include "OSGColladaElementFactoryHelper.h"
 
 OSG_BEGIN_NAMESPACE
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaCOLLADA : public ColladaElement
 {
@@ -74,7 +78,7 @@ class OSG_FILEIO_DLLMAPPING ColladaCOLLADA : public ColladaElement
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void read(void);
+    virtual void read(ColladaElement *colElemParent);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/

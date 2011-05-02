@@ -77,7 +77,7 @@ UInt32 FieldTraits<AttachmentMap>::getBinSize(const AttachmentMap &aMap)
 
     for(; mapIt != mapEnd; ++mapIt)
     {
-        if(mapIt->second->getInternal().getValue() == false)
+        if(mapIt->second->getInternal() == false)
         {
             ++numPublicObjects;
         }
@@ -100,7 +100,7 @@ void FieldTraits<AttachmentMap>::copyToBin(      BinaryDataHandler &pMem,
         
     for(; mapIt != mapEnd; ++mapIt)
     {
-        if(mapIt->second->getInternal().getValue() == false)
+        if(mapIt->second->getInternal() == false)
         {
             ++numPublicObjects;
         }
@@ -110,7 +110,7 @@ void FieldTraits<AttachmentMap>::copyToBin(      BinaryDataHandler &pMem,
     
     for(mapIt = aMap.begin(); mapIt != mapEnd; ++mapIt)
     {
-        if(mapIt->second->getInternal().getValue() == false)
+        if(mapIt->second->getInternal() == false)
         {
             binding = mapIt->first & 0xFFFF;
             fcId    = mapIt->second->getId();
@@ -209,6 +209,15 @@ void EditSFieldHandle<SFAttachmentPtrMap>::add(
     }
 }
 
+void EditSFieldHandle<SFAttachmentPtrMap>::replaceByObj(Attachment * const pOld,
+                                                        Attachment * const pNew)
+{
+    if(_fReplaceMethod)
+    {
+        _fReplaceMethod(pOld, pNew);
+    }
+}
+
 void EditSFieldHandle<SFAttachmentPtrMap>::traverse(TraverseCallback oCallback)
 {
     const SFAttachmentPtrMap *pMap = static_cast<SFAttachmentPtrMap *>(_pField);
@@ -238,7 +247,7 @@ void EditSFieldHandle<SFAttachmentPtrMap>::flatten(MapList &vList)
 
         for(; mapIt != mapEnd; ++mapIt)
         {
-            if(mapIt->second->getInternal().getValue() == true)
+            if(mapIt->second->getInternal() == true)
                 continue;
 
             std::string szKey;
@@ -269,7 +278,7 @@ void EditSFieldHandle<SFAttachmentPtrMap>::flatten(ContainerList &vList)
 
         for(; mapIt != mapEnd; ++mapIt)
         {
-            if(mapIt->second->getInternal().getValue() == true)
+            if(mapIt->second->getInternal() == true)
                 continue;
 
             vList.push_back(mapIt->second);
@@ -292,7 +301,7 @@ bool EditSFieldHandle<SFAttachmentPtrMap>::loadFromBin(
         pMem->getValue(binding);
         pMem->getValue(ptrId  );
         
-        FDEBUG(("OSBCommonElement::readAttachmentMapField: "
+        FDEBUG(("EditSFieldHandle<SFAttachmentPtrMap>::loadFromBin: "
                 "attachment [%u], binding [%u], id [%u].\n",
                 i, binding, ptrId));
         
@@ -402,7 +411,7 @@ void GetSFieldHandle<SFAttachmentPtrMap>::flatten(MapList &vList)
 
         for(; mapIt != mapEnd; ++mapIt)
         {
-            if(mapIt->second->getInternal().getValue() == true)
+            if(mapIt->second->getInternal() == true)
                 continue;
 
             std::string szKey;
@@ -434,7 +443,7 @@ void GetSFieldHandle<SFAttachmentPtrMap>::flatten(ContainerList &vList)
 
         for(; mapIt != mapEnd; ++mapIt)
         {
-            if(mapIt->second->getInternal().getValue() == true)
+            if(mapIt->second->getInternal() == true)
                 continue;
 
             vList.push_back(mapIt->second);

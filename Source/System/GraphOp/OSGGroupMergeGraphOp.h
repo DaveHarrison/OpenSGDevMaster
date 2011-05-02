@@ -48,10 +48,16 @@
 
 OSG_BEGIN_NAMESPACE
 
+/*! \ingroup GrpUtilGraphOp
+    \ingroup GrpLibOSGUtil
+ */
+
 class OSG_UTIL_DLLMAPPING GroupMergeGraphOp : public GraphOp
 {
-/*==========================  PUBLIC  =================================*/
+    /*==========================  PUBLIC  =================================*/
+
   public:
+
     /*---------------------------------------------------------------------*/
     /*! \name Types                                                        */
     /*! \{                                                                 */
@@ -88,7 +94,11 @@ class OSG_UTIL_DLLMAPPING GroupMergeGraphOp : public GraphOp
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
+
   protected:
+
+    bool _ignoreAttachments; // Don't move attachments from child to parent
+
     /*---------------------------------------------------------------------*/
     /*! \name Constructors/Destructors                                     */
     /*! \{                                                                 */
@@ -98,14 +108,16 @@ class OSG_UTIL_DLLMAPPING GroupMergeGraphOp : public GraphOp
 
     /*! \}                                                                 */
     /*==========================  PRIVATE  ================================*/
+
   private:
 
-    Action::ResultE traverseEnter(Node * const node                     );
-    Action::ResultE traverseLeave(Node * const node, Action::ResultE res);
+    Action::ResultE traverseEnter(Node * const node                           );
+    Action::ResultE traverseLeave(Node * const node, Action::ResultE res      );
     
-    void handleNoChildren      (Node * const node, NodeCore * const core);
-    void handleSingleChild     (Node * const node, NodeCore * const core);
-    void handleMultipleChildren(Node * const node, NodeCore * const core);
+    void handleNoChildren      (Node * const node,   NodeCore * const core    );
+    void handleSingleChild     (Node * const node,   NodeCore * const core    );
+    void handleMultipleChildren(Node * const node,   NodeCore * const core    );
+    void mergeAttachments      (Node * const toNode, Node     * const fromNode);
 };
 
 OSG_GEN_MEMOBJPTR(GroupMergeGraphOp);

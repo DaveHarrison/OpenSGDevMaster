@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<FieldContainer
+   name="SkeletonJoint"
+   parent="BaseSkeletonJoint"
+   library="Dynamics"
+   pointerfieldtypes="both"
+   structure="concrete"
+   systemcomponent="true"
+   parentsystemcomponent="true"
+   decoratable="false"
+   isNodeCore="false"
+   childFields="both"
+   parentFields="both"
+>
+  <Field
+     name="invBindMatrix"
+     type="Matrix"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     >
+    Inverse of the bind matrix for this joint.
+  </Field>
+
+  <Field
+     name="matrix"
+     type="Matrix"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     >
+    Transformation matrix of this joint.
+  </Field>
+
+  <Field
+     name="offsetMatrix"
+     type="Matrix"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     >
+    Transformation matrix of this joint.
+  </Field>
+
+</FieldContainer>

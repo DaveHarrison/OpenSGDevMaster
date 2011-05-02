@@ -211,8 +211,8 @@ NodeTransitPtr SceneFileHandlerBase::read(
                     }
                     else
                     {
-                        SFATAL << "Compressed stream has wrong checksum."
-                               << std::endl;
+                        SWARNING << "Compressed stream has wrong checksum."
+                                 << std::endl;
                     }
                 }
                 terminateReadProgress();
@@ -259,7 +259,8 @@ NodeTransitPtr SceneFileHandlerBase::read(
 
 NodeTransitPtr SceneFileHandlerBase::read(const Char8      *fileName,
                                                 GraphOpSeq *graphOpSeq,       
-                                                Resolver    resolver  )
+                                                Resolver    resolver,
+                                                bool        bWarnNotFound )
 {
     NodeTransitPtr returnValue(NULL);
 
@@ -287,12 +288,14 @@ NodeTransitPtr SceneFileHandlerBase::read(const Char8      *fileName,
             }
             else
             {
-                SWARNING << "Couldn't open file " << fileName << std::endl;
+                if(bWarnNotFound == true)
+                    SWARNING << "Couldn't open file " << fileName << std::endl;
             }
         }
         else
         {
-            SWARNING << "Couldn't open file " << fileName << std::endl;
+            if(bWarnNotFound == true)
+                SWARNING << "Couldn't open file " << fileName << std::endl;
         }
 
         commitChanges();
@@ -327,9 +330,12 @@ NodeTransitPtr SceneFileHandlerBase::read(const Char8      *fileName,
         }
         else
         {
-            SWARNING << "Couldn't open input stream for file "
-                     << fullFilePath
-                     << std::endl;
+            if(bWarnNotFound == true)
+            {
+                SWARNING << "Couldn't open input stream for file "
+                         << fullFilePath
+                         << std::endl;
+            }
         }
 
 #ifndef OSG_DISABLE_DEPRECATED
@@ -347,7 +353,8 @@ NodeTransitPtr SceneFileHandlerBase::read(const Char8      *fileName,
         }
         else
         {
-            SWARNING << "could not read " << std::endl;
+            if(bWarnNotFound == true)
+                SWARNING << "could not read " << std::endl;
         }
 #endif
 
@@ -361,8 +368,11 @@ NodeTransitPtr SceneFileHandlerBase::read(const Char8      *fileName,
     }
     else
     {
-        SWARNING << "could not read "       << fullFilePath
-                 << "; unknown file format" << std::endl;
+        if(bWarnNotFound == true)
+        {
+            SWARNING << "could not read "       << fullFilePath
+                     << "; unknown file format" << std::endl;
+        }
     }
 
     commitChanges();
@@ -927,24 +937,25 @@ void SceneFileHandlerBase::initReadProgress(std::istream &is)
 
     _readReady = false;
 
-#if !defined(OSG_EMBEDDED)
     if(_useProgressThread)
     {
-        ThreadRefPtr pt = Thread::find("OSG::FileIOReadProgressThread");
+        _progressData.thread =  Thread::find("OSG::FileIOReadProgressThread");
 
-        if(pt == NULL)
-            pt = OSG::Thread::get("OSG::FileIOReadProgressThread", true);
-
-        if(pt != NULL)
+        if(_progressData.thread == NULL)
         {
-            pt->runFunction(readProgress, 0, NULL);
+            _progressData.thread =
+                OSG::Thread::get("OSG::FileIOReadProgressThread", true);
+        }
+
+        if(_progressData.thread != NULL)
+        {
+            _progressData.thread->runFunction(readProgress, 0, NULL);
         }
         else
         {
             SWARNING << "Couldn't create read progress thread!" << std::endl;
         }
     }
-#endif
 }
 
 void SceneFileHandlerBase::terminateReadProgress(void)
@@ -954,19 +965,15 @@ void SceneFileHandlerBase::terminateReadProgress(void)
 
     _readReady = true;
 
-#if !defined(OSG_EMBEDDED)
-    Thread *pt = Thread::find("OSG::FileIOReadProgressThread");
-
-    if(pt != NULL)
+    if(_progressData.thread != NULL)
     {
         // terminate thread
-        Thread::join(pt);
-        OSG::ThreadManager::the()->remove(pt);
+        Thread::join(_progressData.thread);
+        _progressData.thread = NULL;
     }
-#endif
 
     _progressData.length = 0;
-    _progressData.is = NULL;
+    _progressData.is     = NULL;
 }
 
 void SceneFileHandlerBase::readProgress(void * OSG_CHECK_ARG(data))

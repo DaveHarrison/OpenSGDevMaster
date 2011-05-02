@@ -146,7 +146,7 @@ void InterfaceOptionsBase::classDescInserter(TypeObject &oType)
         "",
         NapTimeFieldId, NapTimeFieldMask,
         true,
-        (Field::FThreadLocal),
+        (Field::FStdAccess | Field::FThreadLocal),
         static_cast<FieldEditMethodSig>(&InterfaceOptions::editHandleNapTime),
         static_cast<FieldGetMethodSig >(&InterfaceOptions::getHandleNapTime));
 
@@ -181,27 +181,27 @@ InterfaceOptionsBase::TypeObject InterfaceOptionsBase::_type(
     "    isBundle=\"true\"\n"
     "    parentFields=\"none\"\n"
     "    childFields=\"single\"\n"
-    ">\n"
-    "\t<Field\n"
-    "\t\tname=\"parent\"\n"
-    "\t\ttype=\"DeviceInterfaceSensor\"\n"
-    "\t\tcardinality=\"single\"\n"
-    "\t\tvisibility=\"internal\"\n"
-    "\t\taccess=\"none\"\n"
+    "    >\n"
+    "    <Field\n"
+    "        name=\"parent\"\n"
+    "        type=\"DeviceInterfaceSensor\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"none\"\n"
     "        category=\"parentpointer\"\n"
     "\t>\n"
-    "\t</Field>\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "     name=\"napTime\"\n"
-    "     type=\"UInt32\"\n"
-    "     cardinality=\"single\"\n"
-    "     visibility=\"internal\"\n"
-    "     access=\"public\"\n"
-    "     defaultValue=\"10\"\n"
-    "     fieldFlags=\"FThreadLocal\"\n"
-    "     >\n"
-    "  </Field>\n"
+    "    <Field\n"
+    "        name=\"napTime\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"10\"\n"
+    "        fieldFlags=\"FStdAccess, FThreadLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
     "</FieldContainer>\n",
     ""
@@ -285,10 +285,12 @@ void InterfaceOptionsBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (ParentFieldMask & whichField))
     {
+        editSField(ParentFieldMask);
         _sfParent.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (NapTimeFieldMask & whichField))
     {
+        editSField(NapTimeFieldMask);
         _sfNapTime.copyFromBin(pMem);
     }
 }
@@ -457,7 +459,7 @@ bool InterfaceOptionsBase::unlinkParent(
 
         if(pTypedParent != NULL)
         {
-            if(_sfParent.getValue() == pParent)
+            if(_sfParent.getValue() == pTypedParent)
             {
                 editSField(ParentFieldMask);
 
@@ -466,8 +468,15 @@ bool InterfaceOptionsBase::unlinkParent(
                 return true;
             }
 
-            FWARNING(("InterfaceOptionsBase::unlinkParent: "
-                      "Child <-> Parent link inconsistent.\n"));
+            SWARNING << "Child (["          << this
+                     << "] id ["            << this->getId()
+                     << "] type ["          << this->getType().getCName()
+                     << "] parentFieldId [" << parentFieldId
+                     << "]) - Parent (["    << pParent
+                     << "] id ["            << pParent->getId()
+                     << "] type ["          << pParent->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

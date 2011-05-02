@@ -122,6 +122,10 @@ OSG_BEGIN_NAMESPACE
     
 */
 
+/*! \var ShaderAttribute ShaderExecutableChunkBase::_mfAttributes
+    
+*/
+
 /*! \var UInt32          ShaderExecutableChunkBase::_sfGLId
     
 */
@@ -266,6 +270,18 @@ void ShaderExecutableChunkBase::classDescInserter(TypeObject &oType)
 
     oType.addInitialDesc(pDesc);
 
+    pDesc = new MFShaderAttribute::Description(
+        MFShaderAttribute::getClassType(),
+        "attributes",
+        "",
+        AttributesFieldId, AttributesFieldMask,
+        false,
+        (Field::MFDefaultFlags | Field::FStdAccess),
+        static_cast<FieldEditMethodSig>(&ShaderExecutableChunk::editHandleAttributes),
+        static_cast<FieldGetMethodSig >(&ShaderExecutableChunk::getHandleAttributes));
+
+    oType.addInitialDesc(pDesc);
+
     pDesc = new SFUInt32::Description(
         SFUInt32::getClassType(),
         "GLId",
@@ -306,142 +322,151 @@ ShaderExecutableChunkBase::TypeObject ShaderExecutableChunkBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "   name=\"ShaderExecutableChunk\"\n"
-    "   parent=\"StateChunk\"\n"
-    "   library=\"System\"\n"
-    "   pointerfieldtypes=\"both\"\n"
-    "   structure=\"concrete\"\n"
-    "   systemcomponent=\"true\"\n"
-    "   parentsystemcomponent=\"true\"\n"
-    "   decoratable=\"false\"\n"
-    "   useLocalIncludes=\"false\"\n"
-    "   docGroupBase=\"GrpSystemShader\"\n"
-    "   >\n"
-    "  <Field\n"
-    "\t name=\"vertexShader\"\n"
-    "\t type=\"ShaderProgram\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"none\"\n"
-    "     category=\"uncountedpointer\"\n"
-    "     >\n"
-    "<!---     \n"
-    "     pushToFieldAs=\"addVertexShader\"\n"
-    "     removeFromMFieldIndexAs=\"subVertexShader\"\n"
-    "     clearFieldAs=\"clearVertexShaders\" -->\n"
-    "\t \n"
+    "    name=\"ShaderExecutableChunk\"\n"
+    "    parent=\"StateChunk\"\n"
+    "    library=\"System\"\n"
+    "    pointerfieldtypes=\"both\"\n"
+    "    structure=\"concrete\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    decoratable=\"false\"\n"
+    "    useLocalIncludes=\"false\"\n"
+    "    docGroupBase=\"GrpSystemShader\"\n"
+    "    >\n"
+    "    <Field\n"
+    "        name=\"vertexShader\"\n"
+    "        type=\"ShaderProgram\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"none\"\n"
+    "        category=\"uncountedpointer\"\n"
+    "        >\n"
+    "        <!---     \n"
+    "            pushToFieldAs=\"addVertexShader\"\n"
+    "            removeFromMFieldIndexAs=\"subVertexShader\"\n"
+    "            clearFieldAs=\"clearVertexShaders\" -->\n"
+    "        \n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"geometryShader\"\n"
-    "\t type=\"ShaderProgram\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"none\"\n"
-    "     category=\"uncountedpointer\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"geometryShader\"\n"
+    "        type=\"ShaderProgram\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"none\"\n"
+    "        category=\"uncountedpointer\"\n"
+    "        >\n"
     "\n"
-    "<!--     \n"
-    "     pushToFieldAs=\"addGeometryShader\"\n"
-    "     removeFromMFieldIndexAs=\"subGeometryShader\"\n"
-    "     clearFieldAs=\"clearGeometryShaders\" -->\n"
+    "        <!--     \n"
+    "             pushToFieldAs=\"addGeometryShader\"\n"
+    "             removeFromMFieldIndexAs=\"subGeometryShader\"\n"
+    "             clearFieldAs=\"clearGeometryShaders\" -->\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"fragmentShader\"\n"
-    "\t type=\"ShaderProgram\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"none\"\n"
-    "     category=\"uncountedpointer\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"fragmentShader\"\n"
+    "        type=\"ShaderProgram\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"none\"\n"
+    "        category=\"uncountedpointer\"\n"
+    "        >\n"
     "\n"
-    "<!--     \n"
-    "     pushToFieldAs=\"addFragmentShader\"\n"
-    "     removeFromMFieldIndexAs=\"subFragmentShader\"\n"
-    "     clearFieldAs=\"clearFragmentShaders\" -->\n"
+    "        <!--     \n"
+    "             pushToFieldAs=\"addFragmentShader\"\n"
+    "             removeFromMFieldIndexAs=\"subFragmentShader\"\n"
+    "             clearFieldAs=\"clearFragmentShaders\" -->\n"
     "\tfragment program object\n"
-    "  </Field>\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"variables\"\n"
-    "\t type=\"ShaderProgramVariables\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "     category=\"childpointer\"\n"
-    "     childParentType=\"FieldContainer\"\n"
-    "     linkParentField=\"Parents\"\n"
-    "\t >\n"
+    "    <Field\n"
+    "        name=\"variables\"\n"
+    "        type=\"ShaderProgramVariables\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        category=\"childpointer\"\n"
+    "        childParentType=\"FieldContainer\"\n"
+    "        linkParentField=\"Parents\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"variableLocations\"\n"
-    "\t type=\"Int32\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"protected\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"variableLocations\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"proceduralVariableLocations\"\n"
-    "\t type=\"Int32\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"protected\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"proceduralVariableLocations\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  \n"
-    "  <Field\n"
-    "\t name=\"geometryVerticesOut\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"0\"\n"
-    "\t >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"geometryInputType\"\n"
-    "\t type=\"GLenum\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"GL_TRIANGLES\"\n"
-    "\t defaultHeader=\"&quot;OSGGL.h&quot;\"\n"
-    "\t >\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"geometryOutputType\"\n"
-    "\t type=\"GLenum\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"GL_TRIANGLE_STRIP\"\n"
-    "\t defaultHeader=\"&quot;OSGGL.h&quot;\"\n"
-    "\t >\n"
-    "  </Field>\n"
+    "    </Field>\n"
+    "    \n"
+    "    <Field\n"
+    "        name=\"geometryVerticesOut\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"0\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"geometryInputType\"\n"
+    "        type=\"GLenum\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"GL_TRIANGLES\"\n"
+    "        defaultHeader=\"&quot;OSGGL.h&quot;\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"geometryOutputType\"\n"
+    "        type=\"GLenum\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"GL_TRIANGLE_STRIP\"\n"
+    "        defaultHeader=\"&quot;OSGGL.h&quot;\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"GLId\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"public\"\n"
-    "\t defaultValue=\"0\"\n"
-    "     fieldFlags=\"FClusterLocal\"\n"
-    "\t >\n"
-    "  </Field>\n"
+    "    <Field\n"
+    "        name=\"attributes\"\n"
+    "        type=\"ShaderAttribute\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"pointSize\"\n"
-    "\t type=\"bool\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"false\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    <Field\n"
+    "        name=\"GLId\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"0\"\n"
+    "        fieldFlags=\"FClusterLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
+    "\n"
+    "    <Field\n"
+    "        name=\"pointSize\"\n"
+    "        type=\"bool\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"false\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tFlag to set whether the shader can change the point size.\n"
-    "  </Field>\n"
+    "    </Field>\n"
     "\n"
     "</FieldContainer>\n",
     ""
@@ -548,6 +573,19 @@ const SFGLenum *ShaderExecutableChunkBase::getSFGeometryOutputType(void) const
 }
 
 
+MFShaderAttribute *ShaderExecutableChunkBase::editMFAttributes(void)
+{
+    editMField(AttributesFieldMask, _mfAttributes);
+
+    return &_mfAttributes;
+}
+
+const MFShaderAttribute *ShaderExecutableChunkBase::getMFAttributes(void) const
+{
+    return &_mfAttributes;
+}
+
+
 SFUInt32 *ShaderExecutableChunkBase::editSFGLId(void)
 {
     editSField(GLIdFieldMask);
@@ -620,6 +658,10 @@ UInt32 ShaderExecutableChunkBase::getBinSize(ConstFieldMaskArg whichField)
     {
         returnValue += _sfGeometryOutputType.getBinSize();
     }
+    if(FieldBits::NoField != (AttributesFieldMask & whichField))
+    {
+        returnValue += _mfAttributes.getBinSize();
+    }
     if(FieldBits::NoField != (GLIdFieldMask & whichField))
     {
         returnValue += _sfGLId.getBinSize();
@@ -673,6 +715,10 @@ void ShaderExecutableChunkBase::copyToBin(BinaryDataHandler &pMem,
     {
         _sfGeometryOutputType.copyToBin(pMem);
     }
+    if(FieldBits::NoField != (AttributesFieldMask & whichField))
+    {
+        _mfAttributes.copyToBin(pMem);
+    }
     if(FieldBits::NoField != (GLIdFieldMask & whichField))
     {
         _sfGLId.copyToBin(pMem);
@@ -690,46 +736,62 @@ void ShaderExecutableChunkBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (VertexShaderFieldMask & whichField))
     {
+        editMField(VertexShaderFieldMask, _mfVertexShader);
         _mfVertexShader.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GeometryShaderFieldMask & whichField))
     {
+        editMField(GeometryShaderFieldMask, _mfGeometryShader);
         _mfGeometryShader.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (FragmentShaderFieldMask & whichField))
     {
+        editMField(FragmentShaderFieldMask, _mfFragmentShader);
         _mfFragmentShader.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (VariablesFieldMask & whichField))
     {
+        editSField(VariablesFieldMask);
         _sfVariables.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (VariableLocationsFieldMask & whichField))
     {
+        editMField(VariableLocationsFieldMask, _mfVariableLocations);
         _mfVariableLocations.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ProceduralVariableLocationsFieldMask & whichField))
     {
+        editMField(ProceduralVariableLocationsFieldMask, _mfProceduralVariableLocations);
         _mfProceduralVariableLocations.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GeometryVerticesOutFieldMask & whichField))
     {
+        editSField(GeometryVerticesOutFieldMask);
         _sfGeometryVerticesOut.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GeometryInputTypeFieldMask & whichField))
     {
+        editSField(GeometryInputTypeFieldMask);
         _sfGeometryInputType.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GeometryOutputTypeFieldMask & whichField))
     {
+        editSField(GeometryOutputTypeFieldMask);
         _sfGeometryOutputType.copyFromBin(pMem);
+    }
+    if(FieldBits::NoField != (AttributesFieldMask & whichField))
+    {
+        editMField(AttributesFieldMask, _mfAttributes);
+        _mfAttributes.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GLIdFieldMask & whichField))
     {
+        editSField(GLIdFieldMask);
         _sfGLId.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (PointSizeFieldMask & whichField))
     {
+        editSField(PointSizeFieldMask);
         _sfPointSize.copyFromBin(pMem);
     }
 }
@@ -868,6 +930,7 @@ ShaderExecutableChunkBase::ShaderExecutableChunkBase(void) :
     _sfGeometryVerticesOut    (UInt32(0)),
     _sfGeometryInputType      (GLenum(GL_TRIANGLES)),
     _sfGeometryOutputType     (GLenum(GL_TRIANGLE_STRIP)),
+    _mfAttributes             (),
     _sfGLId                   (UInt32(0)),
     _sfPointSize              (bool(false))
 {
@@ -886,6 +949,7 @@ ShaderExecutableChunkBase::ShaderExecutableChunkBase(const ShaderExecutableChunk
     _sfGeometryVerticesOut    (source._sfGeometryVerticesOut    ),
     _sfGeometryInputType      (source._sfGeometryInputType      ),
     _sfGeometryOutputType     (source._sfGeometryOutputType     ),
+    _mfAttributes             (source._mfAttributes             ),
     _sfGLId                   (source._sfGLId                   ),
     _sfPointSize              (source._sfPointSize              )
 {
@@ -912,7 +976,7 @@ bool ShaderExecutableChunkBase::unlinkChild(
 
         if(pTypedChild != NULL)
         {
-            if(pTypedChild == _sfVariables.getValue())
+            if(_sfVariables.getValue() == pTypedChild)
             {
                 editSField(VariablesFieldMask);
 
@@ -921,8 +985,15 @@ bool ShaderExecutableChunkBase::unlinkChild(
                 return true;
             }
 
-            FWARNING(("ShaderExecutableChunkBase::unlinkParent: Child <-> "
-                      "Parent link inconsistent.\n"));
+            SWARNING << "Parent (["        << this
+                     << "] id ["           << this->getId()
+                     << "] type ["         << this->getType().getCName()
+                     << "] childFieldId [" << childFieldId
+                     << "]) - Child (["    << pChild
+                     << "] id ["           << pChild->getId()
+                     << "] type ["         << pChild->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }
@@ -1141,6 +1212,31 @@ EditFieldHandlePtr ShaderExecutableChunkBase::editHandleGeometryOutputType(void)
     return returnValue;
 }
 
+GetFieldHandlePtr ShaderExecutableChunkBase::getHandleAttributes      (void) const
+{
+    MFShaderAttribute::GetHandlePtr returnValue(
+        new  MFShaderAttribute::GetHandle(
+             &_mfAttributes,
+             this->getType().getFieldDesc(AttributesFieldId),
+             const_cast<ShaderExecutableChunkBase *>(this)));
+
+    return returnValue;
+}
+
+EditFieldHandlePtr ShaderExecutableChunkBase::editHandleAttributes     (void)
+{
+    MFShaderAttribute::EditHandlePtr returnValue(
+        new  MFShaderAttribute::EditHandle(
+             &_mfAttributes,
+             this->getType().getFieldDesc(AttributesFieldId),
+             this));
+
+
+    editMField(AttributesFieldMask, _mfAttributes);
+
+    return returnValue;
+}
+
 GetFieldHandlePtr ShaderExecutableChunkBase::getHandleGLId            (void) const
 {
     SFUInt32::GetHandlePtr returnValue(
@@ -1242,6 +1338,10 @@ void ShaderExecutableChunkBase::resolveLinks(void)
 #endif
 #ifdef OSG_MT_CPTR_ASPECT
     _mfProceduralVariableLocations.terminateShare(Thread::getCurrentAspect(),
+                                      oOffsets);
+#endif
+#ifdef OSG_MT_CPTR_ASPECT
+    _mfAttributes.terminateShare(Thread::getCurrentAspect(),
                                       oOffsets);
 #endif
 }

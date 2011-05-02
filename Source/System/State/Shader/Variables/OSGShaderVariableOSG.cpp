@@ -143,15 +143,77 @@ void ShaderVariableOSG::changed(ConstFieldMaskArg whichField,
             setOsgVarType(OSGInvViewMatrix);
             setDependency(SHDScene        );
         }
+        else if(_sfName.getValue() == "OSGProjectionMatrix")
+        {
+            setOsgVarType(OSGProjectionMatrix);
+            setDependency(SHDScene           );
+        }
+        else if(_sfName.getValue() == "OSGModelViewMatrix")
+        {
+            setOsgVarType(OSGModelViewMatrix);
+            setDependency(SHDObject          );
+        }
+#ifdef OSG_OGL_COREONLY
+        else if(_sfName.getValue() == "OSGNormalMatrix")
+        {
+            setOsgVarType(OSGNormalMatrix);
+            setDependency(SHDObject      );
+        }
+        else if(_sfName.getValue() == "OSGModelViewProjectionMatrix")
+        {
+            setOsgVarType(OSGModelViewProjectionMatrix);
+            setDependency(SHDObject                   );
+        }
+#endif
         else if(_sfName.getValue() == "OSGStereoLeftEye")
         {
             setOsgVarType(OSGStereoLeftEye);
             setDependency(SHDScene        );
         }
-        else if(_sfName.getValue() == "OSGClusterId")
+        else if(_sfName.getValue() == "OSGDrawerId")
         {
-            setOsgVarType(OSGClusterId);
+            setOsgVarType(OSGDrawerId);
             setDependency(SHDScene    );
+        }
+        else if(_sfName.getValue() == "OSGDrawableId")
+        {
+            setOsgVarType(OSGDrawableId);
+            setDependency(SHDScene     );
+        }
+        else if(_sfName.getValue() == "OSGNodeId")
+        {
+            setOsgVarType(OSGNodeId);
+            setDependency(SHDObject);
+        }
+        else if(_sfName.getValue() == "OSGNodeBoxMin")
+        {
+            setOsgVarType(OSGNodeBoxMin);
+            setDependency(SHDObject    );
+        }
+        else if(_sfName.getValue() == "OSGNodeBoxMax")
+        {
+            setOsgVarType(OSGNodeBoxMax);
+            setDependency(SHDObject    );
+        }
+        else if(_sfName.getValue() == "OSGNodeBoxCenter")
+        {
+            setOsgVarType(OSGNodeBoxCenter);
+            setDependency(SHDObject       );
+        }
+        else if(_sfName.getValue() == "OSGNodeWorldBoxMin")
+        {
+            setOsgVarType(OSGNodeWorldBoxMin);
+            setDependency(SHDObject         );
+        }
+        else if(_sfName.getValue() == "OSGNodeWorldBoxMax")
+        {
+            setOsgVarType(OSGNodeWorldBoxMax);
+            setDependency(SHDObject         );
+        }
+        else if(_sfName.getValue() == "OSGNodeWorldBoxCenter")
+        {
+            setOsgVarType(OSGNodeWorldBoxCenter);
+            setDependency(SHDObject            );
         }
         else if(_sfName.getValue() == "OSGActiveLightsMask")
         {
@@ -256,15 +318,77 @@ void ShaderVariableOSG::setName(const std::string &value)
         setOsgVarType(OSGInvViewMatrix);
         setDependency(SHDScene        );
     }
+    else if(_sfName.getValue() == "OSGProjectionMatrix")
+    {
+        setOsgVarType(OSGProjectionMatrix);
+        setDependency(SHDScene           );
+    }
+    else if(_sfName.getValue() == "OSGModelViewMatrix")
+    {
+        setOsgVarType(OSGModelViewMatrix);
+        setDependency(SHDObject         );
+    }
+#ifdef OSG_OGL_COREONLY
+    else if(_sfName.getValue() == "OSGNormalMatrix")
+    {
+        setOsgVarType(OSGNormalMatrix);
+        setDependency(SHDObject      );
+    }
+    else if(_sfName.getValue() == "OSGModelViewProjectionMatrix")
+    {
+        setOsgVarType(OSGModelViewProjectionMatrix);
+        setDependency(SHDObject                   );
+    }
+#endif
     else if(_sfName.getValue() == "OSGStereoLeftEye")
     {
         setOsgVarType(OSGStereoLeftEye);
         setDependency(SHDScene        );
     }
-    else if(_sfName.getValue() == "OSGClusterId")
+    else if(_sfName.getValue() == "OSGDrawerId")
     {
-        setOsgVarType(OSGClusterId);
-        setDependency(SHDScene    );
+        setOsgVarType(OSGDrawerId);
+        setDependency(SHDScene   );
+    }
+    else if(_sfName.getValue() == "OSGDrawableId")
+    {
+        setOsgVarType(OSGDrawableId);
+        setDependency(SHDScene     );
+    }
+    else if(_sfName.getValue() == "OSGNodeId")
+    {
+        setOsgVarType(OSGNodeId);
+        setDependency(SHDObject);
+    }
+    else if(_sfName.getValue() == "OSGNodeBoxMin")
+    {
+        setOsgVarType(OSGNodeBoxMin);
+        setDependency(SHDObject    );
+    }
+    else if(_sfName.getValue() == "OSGNodeBoxMax")
+    {
+        setOsgVarType(OSGNodeBoxMax);
+        setDependency(SHDObject    );
+    }
+    else if(_sfName.getValue() == "OSGNodeBoxCenter")
+    {
+        setOsgVarType(OSGNodeBoxCenter);
+        setDependency(SHDObject       );
+    }
+    else if(_sfName.getValue() == "OSGNodeWorldBoxMin")
+    {
+        setOsgVarType(OSGNodeWorldBoxMin);
+        setDependency(SHDObject         );
+    }
+    else if(_sfName.getValue() == "OSGNodeWorldBoxMax")
+    {
+        setOsgVarType(OSGNodeWorldBoxMax);
+        setDependency(SHDObject         );
+    }
+    else if(_sfName.getValue() == "OSGNodeWorldBoxCenter")
+    {
+        setOsgVarType(OSGNodeWorldBoxCenter);
+        setDependency(SHDObject            );
     }
     else if(_sfName.getValue() == "OSGActiveLightsMask")
     {
@@ -441,13 +565,253 @@ void ShaderVariableOSG::evaluate(DrawEnv *pEnv,
         }
         break;
 
+        case OSGProjectionMatrix:
+        {
+            Matrix m = pEnv->_openGLState.getProjection();
+
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniformMatrix4fvProc,
+                             osgGlUniformMatrix4fv,
+                             ShaderProgram::getFuncIdUniformMatrix4fv());
+
+                osgGlUniformMatrix4fv(iLocation, 1, GL_FALSE, m.getValues());
+            }
+        }
+        break;
+
+        case OSGModelViewMatrix:
+        {
+            Matrix m = pEnv->_openGLState.getModelView();
+
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniformMatrix4fvProc,
+                             osgGlUniformMatrix4fv,
+                             ShaderProgram::getFuncIdUniformMatrix4fv());
+
+                osgGlUniformMatrix4fv(iLocation, 1, GL_FALSE, m.getValues());
+            }
+        }
+        break;
+
+#ifdef OSG_OGL_COREONLY
+        case OSGNormalMatrix:
+        {
+            Matrix m = pEnv->_openGLState.getNormalMatrix();
+
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniformMatrix4fvProc,
+                             osgGlUniformMatrix4fv,
+                             ShaderProgram::getFuncIdUniformMatrix4fv());
+
+                osgGlUniformMatrix4fv(iLocation, 1, GL_FALSE, m.getValues());
+            }
+        }
+        break;
+
+        case OSGModelViewProjectionMatrix:
+        {
+            Matrix m = pEnv->_openGLState.getModelViewProjection();
+
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniformMatrix4fvProc,
+                             osgGlUniformMatrix4fv,
+                             ShaderProgram::getFuncIdUniformMatrix4fv());
+
+                osgGlUniformMatrix4fv(iLocation, 1, GL_FALSE, m.getValues());
+            }
+        }
+        break;
+#endif
+
         case OSGStereoLeftEye:
         {
         }
         break;
 
-        case OSGClusterId:
+        case OSGDrawerId:
         {
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniform1iProc,
+                             osgGlUniform1i,
+                             ShaderProgram::getFuncIdUniform1i());
+
+                osgGlUniform1i(iLocation, 
+                               GLint(pEnv->getDrawerId()));
+            }
+        }
+        break;
+
+        case OSGDrawableId:
+        {
+            if(iLocation != -1)
+            {
+                OSGGETGLFUNC(OSGglUniform1iProc,
+                             osgGlUniform1i,
+                             ShaderProgram::getFuncIdUniform1i());
+
+                osgGlUniform1i(iLocation, 
+                               GLint(pEnv->getDrawableId()));
+            }
+       }
+        break;
+
+        case OSGNodeId:
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform1iProc,
+                                 osgGlUniform1i,
+                                 ShaderProgram::getFuncIdUniform1i());
+
+                    osgGlUniform1i(iLocation, 
+                                   GLint(pEnv->getSGNode()->getId()));
+                }
+            }
+        }
+        break;
+
+        case OSGNodeBoxMin:
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    const BoxVolume &bvBox = pEnv->getSGNode()->getVolume();
+
+                    osgGlUniform3f(iLocation, 
+                                   bvBox.getMin()[0],
+                                   bvBox.getMin()[1],
+                                   bvBox.getMin()[2]);
+                }
+            }
+        }
+        break;
+
+        case OSGNodeBoxMax :
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    const BoxVolume &bvBox = pEnv->getSGNode()->getVolume();
+
+                    osgGlUniform3f(iLocation, 
+                                   bvBox.getMax()[0],
+                                   bvBox.getMax()[1],
+                                   bvBox.getMax()[2]);
+                }
+            }
+        }
+        break;
+
+        case OSGNodeBoxCenter:
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    Pnt3f vBoxCenter;
+
+                    pEnv->getSGNode()->getVolume().getCenter(vBoxCenter);
+
+                    osgGlUniform3f(iLocation, 
+                                   vBoxCenter[0],
+                                   vBoxCenter[1],
+                                   vBoxCenter[2]);
+                }
+            }
+        }
+        break;
+
+
+        case OSGNodeWorldBoxMin:
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    BoxVolume bvWorldBox;
+
+                    pEnv->getSGNode()->getWorldVolume(bvWorldBox);
+
+                    osgGlUniform3f(iLocation, 
+                                   bvWorldBox.getMin()[0],
+                                   bvWorldBox.getMin()[1],
+                                   bvWorldBox.getMin()[2]);
+                }
+            }
+        }
+        break;
+
+        case OSGNodeWorldBoxMax :
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    BoxVolume bvWorldBox;
+
+                    pEnv->getSGNode()->getWorldVolume(bvWorldBox);
+
+                    osgGlUniform3f(iLocation, 
+                                   bvWorldBox.getMax()[0],
+                                   bvWorldBox.getMax()[1],
+                                   bvWorldBox.getMax()[2]);
+                }
+            }
+        }
+        break;
+
+        case OSGNodeWorldBoxCenter:
+        {
+            if(iLocation != -1)
+            {
+                if(pEnv->getSGNode() != NULL)
+                {
+                    OSGGETGLFUNC(OSGglUniform3fProc,
+                                 osgGlUniform3f,
+                                 ShaderProgram::getFuncIdUniform3f());
+
+                    BoxVolume bvWorldBox;
+                    Pnt3f     vWorldBoxCenter;
+
+                    pEnv->getSGNode()->getWorldVolume(bvWorldBox);
+
+                    bvWorldBox.getCenter(vWorldBoxCenter);
+
+                    osgGlUniform3f(iLocation, 
+                                   vWorldBoxCenter[0],
+                                   vWorldBoxCenter[1],
+                                   vWorldBoxCenter[2]);
+                }
+            }
         }
         break;
 

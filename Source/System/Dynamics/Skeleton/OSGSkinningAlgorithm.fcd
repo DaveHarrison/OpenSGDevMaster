@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<FieldContainer
+   name="SkinningAlgorithm"
+   parent="Algorithm"
+   library="Dynamics"
+   pointerfieldtypes="both"
+   structure="abstract"
+   systemcomponent="true"
+   parentsystemcomponent="true"
+   decoratable="false"
+   childFields="both"
+   parentFields="none"
+>
+  <Field
+     name="skin"
+     type="SkinnedGeometry"
+     category="parentpointer"
+     cardinality="single"
+     visibility="external"
+     access="none"
+     defaultValue="NULL"
+     >
+  </Field>
+
+  <Field
+     name="skeleton"
+     type="Skeleton"
+     category="pointer"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="NULL"
+     >
+  </Field>
+
+</FieldContainer>

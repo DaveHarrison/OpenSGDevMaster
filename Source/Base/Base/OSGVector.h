@@ -337,23 +337,27 @@ struct SelectVecStorage;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template <class ValueTypeT>
-struct SelectVecStorage<ValueTypeT, 1> : public VecStorage1<ValueTypeT>
+struct SelectVecStorage<ValueTypeT, 1>
 {
+    typedef VecStorage1<ValueTypeT>  Type;
 };
 
 template <class ValueTypeT>
-struct SelectVecStorage<ValueTypeT, 2> : public VecStorage2<ValueTypeT>
+struct SelectVecStorage<ValueTypeT, 2>
 {
+    typedef VecStorage2<ValueTypeT>  Type;
 };
 
 template <class ValueTypeT>
-struct SelectVecStorage<ValueTypeT, 3> : public VecStorage3<ValueTypeT>
+struct SelectVecStorage<ValueTypeT, 3>
 {
+    typedef VecStorage3<ValueTypeT>  Type;
 };
 
 template <class ValueTypeT>
-struct SelectVecStorage<ValueTypeT, 4> : public VecStorage4<ValueTypeT>
+struct SelectVecStorage<ValueTypeT, 4>
 {
+    typedef VecStorage4<ValueTypeT>  Type;
 };
 #endif
 
@@ -373,18 +377,18 @@ struct SelectVecStorage<ValueTypeT, 4> : public VecStorage4<ValueTypeT>
 #endif
 
 template <class ValueTypeT, UInt32 SizeI>
-class Point : public SelectVecStorage<ValueTypeT, SizeI>
+class Point : public SelectVecStorage<ValueTypeT, SizeI>::Type
 {
     /*==========================  PUBLIC  =================================*/
 
   public:
 
-    typedef          SelectVecStorage<ValueTypeT,
-                                      SizeI      >          Inherited;
+    typedef typename SelectVecStorage<ValueTypeT,
+                                      SizeI      >::Type    Inherited;
     typedef          Point           <ValueTypeT, 
                                       SizeI      >          Self;
-    typedef          SelectVecStorage<ValueTypeT,
-                                      SizeI      >          StorageInterface;
+    typedef typename SelectVecStorage<ValueTypeT,
+                                      SizeI      >::Type    StorageInterface;
     
     typedef          ValueTypeT                             ValueType;    
     typedef typename TypeTraits<ValueTypeT>::RealReturnType RealReturnType;
@@ -1718,90 +1722,6 @@ typedef OSG::Point< OSG::Real128, 4 > Pnt4ld;
  */
 
 typedef OSG::Pnt4ld *Pnt4ldP;
-
-/*! \}                                                                 */
-/*---------------------------------------------------------------------*/
-/*! \name Vector/Point Profile Types                                   */
-/*! \{                                                                 */
-
-#ifdef OSG_FLOAT_PROFILE
-
-/*! \var typedef OSG::Vec2f Vec2r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec2f Vec2r;
-
-/*! \var typedef OSG::Vec3f Vec3r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec3f Vec3r;
-
-/*! \var typedef OSG::Vec4f Vec4r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec4f Vec4r;
-
-/*! \var typedef OSG::Pnt2f Pnt2r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt2f Pnt2r;
-
-/*! \var typedef OSG::Pnt3f Pnt3r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt3f Pnt3r;
-
-/*! \var typedef OSG::Pnt4f Pnt4r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt4f Pnt4r;
-
-#else
-
-
-/*! \var typedef OSG::Vec2fx Vec2r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec2fx Vec2r;
-
-/*! \var typedef OSG::Vec3fx Vec3r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec3fx Vec3r;
-
-/*! \var typedef OSG::Vec4fx Vec4r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Vector
- */
-typedef OSG::Vec4fx Vec4r;
-
-/*! \var typedef OSG::Pnt2fx Pnt2r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt2fx Pnt2r;
-
-/*! \var typedef OSG::Pnt3fx Pnt3r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt3fx Pnt3r;
-
-/*! \var typedef OSG::Pnt4fx Pnt4r;
-    \ingroup GrpBaseBaseMathObj
-    \relatesalso OSG::Point
- */
-typedef OSG::Pnt4fx Pnt4r;
-
-#endif
 
 /*! \}                                                                 */
 /*---------------------------------------------------------------------*/

@@ -49,6 +49,8 @@ OSG_OPTION(OSGBUILD_TESTS                        "Build test programs" ON)
 OSG_OPTION(OSGBUILD_UNITTESTS                    "Build/run unit test programs" OFF)
 OSG_OPTION(OSGBUILD_EXAMPLES_SIMPLE              "Build example programs during system build" OFF)
 OSG_OPTION(OSGBUILD_EXAMPLES_ADVANCED            "Build advanced example programs during system build" OFF)
+OSG_OPTION(OSGBUILD_PYTHON_BINDINGS              "Build python bindings" OFF)
+OSG_OPTION(OSGBUILD_PYTHON_DUMP_DECLS            "Dump decls while building python" FALSE)
 
 OSG_OPTION(OSGEXCLUDE_TESTS_FROM_ALL             "Exclude test programs from all target" OFF)
 OSG_OPTION(OSGEXCLUDE_UNITTESTS_FROM_ALL         "Build/run unit test programs" OFF)
@@ -61,6 +63,9 @@ SET(OSGBUILD_PACKAGE_TYPE "" CACHE STRING
 
 OSG_OPTION(OSG_ENABLE_NEW_SHADER "" ON)
 OSG_OPTION(OSG_ENABLE_OGL2_SHADERFUNCTIONS "" ON)
+OSG_OPTION(OSG_ENABLE_OGL_VERTEXATTRIB_FUNCS "" OFF)
+OSG_OPTION(OSG_ENABLE_OGL_COREONLY "" OFF)
+
 OSG_SET_CACHE(OSG_SHADER_CACHE_MODE 5 STRING "")
 
 OSG_OPTION(OSG_ENABLE_FCD2CODE "" OFF)
@@ -79,14 +84,24 @@ OSG_OPTION(OSG_ENABLE_MEMORY_DEBUGGING "" OFF)
 OSG_OPTION(OSG_ENABLE_DOUBLE_MATRIX_STACK "" OFF)
 OSG_OPTION(OSG_ENABLE_DEFAULT_READONLY_CHANGELIST "" OFF)
 OSG_OPTION(OSG_ENABLE_PAR_PARTITION_DRAWING "" OFF)
+OSG_OPTION(OSG_DISABLE_SOURCE_GROUPS "" OFF)
+OSG_OPTION(OSG_ENABLE_WRITE_PYTHON_TO_SOURCE "" OFF)
+
+OSG_SET_CACHE(OSG_PYTHON_MODULE_BASE_DIR "" PATH "")
 
 IF(WIN32)
-    OPTION(OSG_ENABLE_WIN_LOCALSTORAGE "" ON)
-    OPTION(OSG_DISABLE_MICROSOFT_SECURE_CXXX "" OFF)
+  OPTION(OSG_ENABLE_WIN_LOCALSTORAGE "" ON)
+  OPTION(OSG_DISABLE_MICROSOFT_SECURE_CXXX "" OFF)
+
+  IF(OSG_DISABLE_MICROSOFT_SECURE_CXXX)
+    OPTION(OSG_DISABLE_MS_ITERATOR_DEBUGGING "" ON)
+  ELSE(OSG_DISABLE_MICROSOFT_SECURE_CXXX)
+    OPTION(OSG_DISABLE_MS_ITERATOR_DEBUGGING "" OFF)
+  ENDIF(OSG_DISABLE_MICROSOFT_SECURE_CXXX)
 ELSEIF(APPLE)
-    OPTION(OSG_ENABLE_ELF_LOCALSTORAGE "" OFF)
+  OPTION(OSG_ENABLE_ELF_LOCALSTORAGE "" OFF)
 ELSEIF(UNIX)
-    OPTION(OSG_ENABLE_ELF_LOCALSTORAGE "" ON)
+  OPTION(OSG_ENABLE_ELF_LOCALSTORAGE "" ON)
 ENDIF()
 
 OPTION(OSG_ENABLE_AUTOINIT_THREADS "" OFF)
@@ -105,6 +120,8 @@ OSG_OPTION(OSGCOMPAT_ENABLE_DEPRECATED_PROPS "" OFF)
 OSG_SET_CACHE(OSG_RENDERPROPERTY_BITS 64 STRING "")
 OSG_SET_CACHE(OSG_RENDERPROPERTY_UNIQUE_BITS 16 STRING "")
 
+OSG_OPTION(OSG_GENERATE_SEPARATE_LIB_DOC "Generate separate doxygen documentation for contrib libraries" OFF)
+OSG_OPTION(OSG_INSTALL_DOXYDOC "Install Doxygen documentation" OFF)
 
 SET(OSG_DOXY_DOC_TYPE "User" CACHE STRING
     "The type of documentation to generate (User, Developer, Trac)")
@@ -118,47 +135,55 @@ SET(OSG_DOXY_STDOUT_LOG CACHE FILEPATH "log std to file")
 ## prep options for OSGConfigured.h
 
 IF(NOT OSGCOMPAT_ENABLE_DEPRECATED)
-    SET(OSG_DISABLE_DEPRECATED 1)
+  SET(OSG_DISABLE_DEPRECATED 1)
 ENDIF(NOT OSGCOMPAT_ENABLE_DEPRECATED)
 
 IF(OSG_ENABLE_SSE2)
-    SET(OSG_SIMD_SSE 1)
+  SET(OSG_SIMD_SSE 1)
 ENDIF(OSG_ENABLE_SSE2)
 
 IF(OSG_ENABLE_NEW_OSB_IO)
-    SET(OSG_NEW_OSB_IO 1)
+  SET(OSG_NEW_OSB_IO 1)
 ENDIF(OSG_ENABLE_NEW_OSB_IO)
 
 IF(OSG_ENABLE_GLDEFINE_MAPPER)
-    SET(OSG_GL_DEFMAPPER 1)
+  SET(OSG_GL_DEFMAPPER 1)
 ENDIF(OSG_ENABLE_GLDEFINE_MAPPER)
 
 IF(OSG_ENABLE_OGL2_SHADERFUNCTIONS)
-    SET(OSG_OGL2_SHADERFUNCS 1)
+  SET(OSG_OGL2_SHADERFUNCS 1)
 ENDIF(OSG_ENABLE_OGL2_SHADERFUNCTIONS)
 
+IF(OSG_ENABLE_OGL_VERTEXATTRIB_FUNCS)
+  SET(OSG_OGL_VERTEXATTRIB_FUNCS 1)
+ENDIF(OSG_ENABLE_OGL_VERTEXATTRIB_FUNCS)
+
+IF(OSG_ENABLE_OGL_COREONLY)
+  SET(OSG_OGL_COREONLY 1)
+ENDIF(OSG_ENABLE_OGL_COREONLY)
+
 IF(OSG_ENABLE_NEW_SHADER)
-    SET(OSG_NEW_SHADER 1)
+  SET(OSG_NEW_SHADER 1)
 ENDIF(OSG_ENABLE_NEW_SHADER)
 
 IF(OSGCOMPAT_ENABLE)
-    SET(OSG_1_COMPAT 1)
+  SET(OSG_1_COMPAT 1)
 ENDIF(OSGCOMPAT_ENABLE)
 
 IF(NOT OSG_ENABLE_SCANPARSE_REGEN)
-    SET(OSG_PREBUILD_SCANPARSE 1)
+  SET(OSG_PREBUILD_SCANPARSE 1)
 ENDIF(NOT OSG_ENABLE_SCANPARSE_REGEN)
 
 IF(OSG_ENABLE_ELF_LOCALSTORAGE)
-    SET(OSG_PTHREAD_ELF_TLS 1)
+  SET(OSG_PTHREAD_ELF_TLS 1)
 ENDIF(OSG_ENABLE_ELF_LOCALSTORAGE)
 
 IF(OSG_ENABLE_WIN_LOCALSTORAGE)
-    SET(OSG_WIN32_ASPECT_USE_LOCALSTORAGE 1)
+  SET(OSG_WIN32_ASPECT_USE_LOCALSTORAGE 1)
 ENDIF(OSG_ENABLE_WIN_LOCALSTORAGE)
 
 IF(OSGCOMPAT_ENABLE_DEPRECATED_PROPS)
-    SET(OSG_DEPRECATED_PROPS 1)
+  SET(OSG_DEPRECATED_PROPS 1)
 ENDIF(OSGCOMPAT_ENABLE_DEPRECATED_PROPS)
 
 SET(OSG_SHC_MODE_${OSG_SHADER_CACHE_MODE} 1)
@@ -194,7 +219,6 @@ IF(OSGEXCLUDE_EXAMPLES_ADVANCED_FROM_ALL)
 ELSE()
   SET(OSGEXCLUDE_EXAMPLES_ADVANCED "")
 ENDIF()
-
 
 #####################
 # External extensions
@@ -236,6 +260,8 @@ OSG_OPTION(OSG_LINK_EXTERNAL_MODULES_TO_CSM "" FALSE)
 
 SET(OSG_PLATFORM_64 0)
 SET(OSG_PLATFORM_32 0)
+SET(OSG_APPLE64     0)
+SET(OSG_APPLE32     0)
 SET(OSG_LIBDIR_SUFFIX "")
 
 IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -246,8 +272,16 @@ IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
     SET(OSG_LIBDIR_BASE_SUFFIX "64")
   ENDIF(NOT WIN32)
 
+  IF(APPLE)
+    SET(OSG_APPLE64 1)
+  ENDIF(APPLE)
+
 ELSE()
-    SET(OSG_PLATFORM_32 1)
+  SET(OSG_PLATFORM_32 1)
+
+  IF(APPLE)
+    SET(OSG_APPLE32 1)
+  ENDIF(APPLE)
 ENDIF()
 
 
@@ -257,10 +291,39 @@ ENDIF()
 
 IF(NOT WIN32 AND NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Debug CACHE STRING
-      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      "Choose the type of build, options are: Debug Release."
       FORCE)
 ENDIF(NOT WIN32 AND NOT CMAKE_BUILD_TYPE)
 
+IF(NOT WIN32) 
+  IF(NOT CMAKE_BUILD_TYPE STREQUAL "Debug"          AND 
+     NOT CMAKE_BUILD_TYPE STREQUAL "DebugGV"        AND
+     NOT CMAKE_BUILD_TYPE STREQUAL "Release"        AND
+     NOT CMAKE_BUILD_TYPE STREQUAL "ReleaseGV"      AND
+     NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"   )
+
+    MESSAGE(FATAL_ERROR "incorrect build type ${CMAKE_BUILD_TYPE}.\n"
+                        "Please use either Release or Debug")
+
+  ENDIF()
+ELSEIF(NOT MSVC_IDE)
+
+  IF(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    SET(CMAKE_BUILD_TYPE DebugOpt CACHE STRING
+        "Choose the type of build, options are: ${CMAKE_CONFIGURATION_TYPES}."
+        FORCE)  
+  ENDIF()
+
+  IF(NOT CMAKE_BUILD_TYPE STREQUAL "Debug"    AND 
+     NOT CMAKE_BUILD_TYPE STREQUAL "DebugOpt" AND
+     NOT CMAKE_BUILD_TYPE STREQUAL "Release"  AND
+     NOT CMAKE_BUILD_TYPE STREQUAL "ReleaseNoOpt")
+
+    MESSAGE(FATAL_ERROR "incorrect build type ${CMAKE_BUILD_TYPE}.\n"
+                        "Please use on of ${CMAKE_CONFIGURATION_TYPES}")
+
+  ENDIF()
+ENDIF()
 
 IF(NOT OSG_COMPILER_DEFAULTS)
    INCLUDE(CMake/SetupCompiler.cmake)
@@ -273,6 +336,7 @@ IF(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
    CMAKE_BUILD_TYPE STREQUAL "DebugGV")
 
     SET(OSG_LIBDIR_SUFFIX "${OSG_LIBDIR_SUFFIX}/debug")
+    SET(OSG_LIBDIR_BUILD_TYPE_SUFFIX "debug")
 
 ENDIF()
 
@@ -283,6 +347,13 @@ OSG_CHECK_INSTALL()
 ##############################################################################
 # DEPENDENCIES
 ##############################################################################
+
+# Global include/library dirs, libs and definitions
+SET(OSG_GLOBAL_DEP_INCDIR "")
+SET(OSG_GLOBAL_DEP_LIBDIR "")
+SET(OSG_GLOBAL_DEP_LIBS   "")
+SET(OSG_GLOBAL_DEP_DEFS   "")
+
 
 #IF(WIN32)
   OSG_OPTION(OSG_USE_OSGSUPPORT_LIBS "" OFF)
@@ -336,7 +407,7 @@ IF(NOT OSG_BUILD_DEPENDEND)
 
 #    MESSAGE(STATUS "zlib: ${ZLIB_FOUND}")
 
-    IF(UNIX AND NOT APPLE)
+    IF(UNIX AND NOT OSG_APPLE32)
         #############
         #### Freetype
         #############
@@ -356,9 +427,10 @@ IF(NOT OSG_BUILD_DEPENDEND)
 
         OSG_ADD_OPT(FREETYPE_FOUND)
         OSG_ADD_OPT(FREETYPE_INCLUDE_DIR_freetype2)
+        OSG_ADD_OPT(FREETYPE_INCLUDE_DIR_ft2build)
         OSG_ADD_OPT(FONTCONFIG_LIBRARY)
         OSG_ADD_OPT(FREETYPE_LIBRARIES)
-    ENDIF(UNIX AND NOT APPLE)
+    ENDIF(UNIX AND NOT OSG_APPLE32)
 
     ##############
     #### ImageLibs
@@ -549,6 +621,46 @@ IF(NOT OSG_BUILD_DEPENDEND)
     #############
 
     FIND_PACKAGE(PythonInterp)
+    FIND_PACKAGE(PythonLibs)
+
+    OSG_ADD_OPT(PYTHON_INCLUDE_PATH)
+    OSG_ADD_OPT(PYTHON_LIBRARY)
+
+    IF(Boost_FOUND AND PYTHONLIBS_FOUND)
+
+      FIND_PACKAGE(Boost COMPONENTS python)
+
+      IF(Boost_FOUND AND WIN32)
+
+        SET(OSG_BOOST_PYTHON_TARGETS )
+        OSG_ADD_IMPORT_LIB(OSG_BOOST_PYTHON_TARGETS Boost_PYTHON_LIBRARY)
+        SET(OSG_BOOST_PYTHON_LIBS ${OSG_BOOST_PYTHON_TARGETS})
+      
+      ELSE(Boost_FOUND AND WIN32)
+
+        IF(CMAKE_BUILD_TYPE STREQUAL "Debug" OR 
+           CMAKE_BUILD_TYPE STREQUAL "DebugOpt")
+
+          SET(OSG_BOOST_PYTHON_LIBS ${Boost_PYTHON_LIBRARY_DEBUG})
+
+        ELSE()
+          SET(OSG_BOOST_PYTHON_LIBS ${Boost_PYTHON_LIBRARY_RELEASE})
+        ENDIF()
+
+      ENDIF(Boost_FOUND AND WIN32)
+
+      # We ignore if boost python fails, we catch that somewhere else
+      # so if we get here Boost_FOUND was true in the first place
+      SET(Boost_FOUND TRUE)
+
+      FIND_PACKAGE(GCCXML)
+
+      OSG_SET_CACHE(PYOSG_PYPLUSPLUS_DIR "" PATH "")
+      OSG_SET_CACHE(PYOSG_PYPLUSPLUS_GOODIES_DIR "" PATH "")
+      OSG_SET_CACHE(PYOSG_DIR "" PATH "")
+
+    ENDIF()
+
 
     ###############
     #### Flex/Bison
@@ -623,6 +735,11 @@ ENDIF()
 ###############
 #### Doxygen
 ###############
+
+IF(EXISTS "${OSG_SUPPORT_ROOT}/bin/doxygen" AND NOT DOXYGEN_EXECUTABLE)
+  SET(DOXYGEN_EXECUTABLE "${OSG_SUPPORT_ROOT}/bin/doxygen" 
+                         CACHE FILEPATH "doxygen executable (custom)" FORCE)
+ENDIF()
 
 FIND_PACKAGE(Doxygen)
 
@@ -707,9 +824,395 @@ IF(OSGBUILD_UNITTESTS)
     ADD_DEPENDENCIES(OSGAll OSGAllUnitTests)
 ENDIF(OSGBUILD_UNITTESTS)
 
+###############
+# Python
+###############
+
+# optional pass for test programs
+IF(OSGBUILD_PYTHON_BINDINGS)
+    LIST(APPEND OSG_CMAKE_PASSES "OSGPYTHON")
+    SET(OSG_PASSDIR_OSGPYTHON "Python")
+
+    IF(EXISTS ${PYOSG_PYPLUSPLUS_DIR})
+      SET(OSG_HAS_PYOSG_PYPLUSPLUS_DIR "True")
+    ELSE()
+      SET(OSG_HAS_PYOSG_PYPLUSPLUS_DIR "False")
+    ENDIF()
+
+    IF(EXISTS ${PYOSG_PYPLUSPLUS_GOODIES_DIR})
+      SET(OSG_HAS_PYOSG_PYPLUSPLUS_GOODIES_DIR "True")
+    ELSE()
+      SET(OSG_HAS_PYOSG_PYPLUSPLUS_GOODIES_DIR "False")
+    ENDIF()
+
+    SET(OSG_CAN_REGEN_PYTHON_BINDINGS FALSE)
+
+    IF(GCCXML                       AND
+       PYOSG_DIR                    AND
+       PYOSG_PYPLUSPLUS_DIR         AND 
+       PYOSG_PYPLUSPLUS_GOODIES_DIR)
+
+     IF(EXISTS ${GCCXML}                       AND
+        EXISTS ${PYOSG_DIR}                    AND
+        EXISTS ${PYOSG_PYPLUSPLUS_DIR}         AND 
+        EXISTS ${PYOSG_PYPLUSPLUS_GOODIES_DIR})
+
+        SET(OSG_CAN_REGEN_PYTHON_BINDINGS TRUE)
+
+      ENDIF()
+    ENDIF()
+
+    EXECUTE_PROCESS(
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${CMAKE_SOURCE_DIR}/Bindings/Python/genLibOrder.py"
+                "${CMAKE_BINARY_DIR}/Python/Helper/genLibOrder.py")
+
+    FILE(WRITE  "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "# Lib order information\n\n\nlibInfo = {}\n\n")
+    FILE(APPEND "${CMAKE_BINARY_DIR}/Python/Helper/libOrder.py" "fullLibInfo = {}\n\n")
+
+    IF(EXISTS ${PYOSG_DIR})
+      FILE(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/Python/Helper")
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${PYOSG_DIR}/src/osggen.py"
+                  "${CMAKE_BINARY_DIR}/Python/Helper/osggen.py")
+
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${CMAKE_SOURCE_DIR}/Bindings/Python/splitGenHelper.py"
+                  "${CMAKE_BINARY_DIR}/Python/Helper/splitGenHelper.py")
+     
+      #########################
+      # settings.py
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/settings.py")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_BINARY_DIR}/Python/Helper/processed/settings.py.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_BINARY_DIR}/Python/Helper/settings.py")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Bindings/Python/Patches/settings.py.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Python/Helper/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+      #########################
+      # PreBoostPython.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/PreBoostPython.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/processed/PreBoostPython.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/PreBoostPython.h")
+
+      FILE(READ ${_OSG_FILE_IN} _OSG_FILE_IN_DATA)
+
+      STRING(REPLACE "<OpenSG/"
+                     "<" _OSG_FILE_IN_DATA_P1 "${_OSG_FILE_IN_DATA}")
+
+      FILE(WRITE ${_OSG_FILE_OUT_PROC} "${_OSG_FILE_IN_DATA_P1}")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # OsgPtrHelpers.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/OsgPtrHelpers.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/processed/OsgPtrHelpers.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/OsgPtrHelpers.h")
+
+      FILE(READ ${_OSG_FILE_IN} _OSG_FILE_IN_DATA)
+
+      STRING(REPLACE "<OpenSG/"
+                     "<" _OSG_FILE_IN_DATA_P1 "${_OSG_FILE_IN_DATA}")
+
+      FILE(WRITE ${_OSG_FILE_OUT_PROC} "${_OSG_FILE_IN_DATA_P1}")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # pypp_OSGBase_aliases.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/aliases.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/processed/pypp_aliases.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/pypp_aliases.h")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Bindings/Python/Patches/pypp_aliases.h.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Bindings/Python/Common/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # ColorWrapper.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/ColorWrapper.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed/ColorWrapper.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/ColorWrapper.h")
+
+      FILE(READ ${_OSG_FILE_IN} _OSG_FILE_IN_DATA)
+
+      STRING(REPLACE "<OpenSG/"
+                     "<" _OSG_FILE_IN_DATA_P1 "${_OSG_FILE_IN_DATA}")
+
+      FILE(WRITE ${_OSG_FILE_OUT_PROC} "${_OSG_FILE_IN_DATA_P1}")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # VecStorageWrappers.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/VecStorageWrappers.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed/VecStorageWrappers.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/VecStorageWrappers.h")
+
+      FILE(READ ${_OSG_FILE_IN} _OSG_FILE_IN_DATA)
+
+      STRING(REPLACE "<OpenSG/"
+                     "<" _OSG_FILE_IN_DATA_P1 "${_OSG_FILE_IN_DATA}")
+
+      FILE(WRITE ${_OSG_FILE_OUT_PROC} "${_OSG_FILE_IN_DATA_P1}")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # BaseWrappers.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/Wrappers.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed/BaseWrappers.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/BaseWrappers.h")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Patches/wrappers.h.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # BaseWrappers.cpp
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/Wrappers.cpp")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed/BaseWrappers.cpp.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/BaseWrappers.cpp")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Patches/wrappers.cpp.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Source/Base/Bindings/Python/Wrapper/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+
+      #########################
+      # SystemWrappers.h
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/Wrappers.h")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/processed/SystemWrappers.h.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/SystemWrappers.h")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Patches/wrappers.h.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # SystemWrappers.cpp
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/Wrappers.cpp")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/processed/SystemWrappers.cpp.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/SystemWrappers.cpp")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Patches/wrappers.cpp.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Source/System/Bindings/Python/Wrapper/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # helpers.py
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/lib/helpers.py")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed/helpers.py.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Bindings/Python/Patches/helpers.py.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # cored_node.py
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/lib/cored_node.py")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed/cored_node.py.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Bindings/Python/Patches/cored_node.py.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+
+      #########################
+      # fcd_reflector.py
+      #########################
+
+      SET(_OSG_FILE_IN       "${PYOSG_DIR}/src/osg_module/lib/fcd_reflector.py")
+      SET(_OSG_FILE_OUT_PROC "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed/fcd_reflector.py.proc")
+      SET(_OSG_FILE_OUT      "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py")
+      SET(_OSG_PATCH_FILE    "${CMAKE_SOURCE_DIR}/Bindings/Python/Patches/fcd_reflector.py.patch")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                  "${_OSG_FILE_IN}"
+                  "${_OSG_FILE_OUT_PROC}")
+
+      EXECUTE_PROCESS(COMMAND "patch" "-p0" 
+                      INPUT_FILE "${_OSG_PATCH_FILE}"
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/processed")
+
+      EXECUTE_PROCESS(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                  "${_OSG_FILE_OUT_PROC}"
+                  "${_OSG_FILE_OUT}")
+
+    ENDIF(EXISTS ${PYOSG_DIR})
+
+    ADD_CUSTOM_TARGET(OSGPy)
+    IF(OSG_CAN_REGEN_PYTHON_BINDINGS)
+      ADD_CUSTOM_TARGET(OSGPyGen)
+    ENDIF()
+#    ADD_CUSTOM_TARGET(OSGPyBuild)
+
+ENDIF(OSGBUILD_PYTHON_BINDINGS)
+
 #################
 # Documentation I
 #################
+SET(OSG_DOXY_HTML_DIR "${CMAKE_BINARY_DIR}/Doc/html")
+FILE(MAKE_DIRECTORY ${OSG_DOXY_HTML_DIR})
+
+IF(OSG_GENERATE_SEPARATE_LIB_DOC)
+    ADD_CUSTOM_TARGET(Doc)
+ENDIF()
+
+IF(DOXYGEN_EXECUTABLE)
+    SET(DOXYGEN_VERSION)
+    EXECUTE_PROCESS(COMMAND "${DOXYGEN_EXECUTABLE}" "--version"
+                    OUTPUT_VARIABLE DOXYGEN_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    IF(DOXYGEN_VERSION STREQUAL "1.7.3")
+        MESSAGE(WARNING "Detected doxygen version 1.7.3, which is known to crash "
+                        "when building OpenSG documentation. "
+                        "Please use a different version, sorry for the inconvenience.")
+    ENDIF(DOXYGEN_VERSION STREQUAL "1.7.3")
+ENDIF(DOXYGEN_EXECUTABLE)
 
 IF(NOT OSG_DOXY_INPUTS)
     # add a pass for doxygen to run
@@ -755,9 +1258,40 @@ ELSEIF(OSG_DOXY_DOC_TYPE STREQUAL "Trac")
 
 ENDIF(OSG_DOXY_DOC_TYPE STREQUAL "User")
 
+IF(NOT OSG_GENERATE_SEPARATE_LIB_DOC)
+  SET(OSG_OpenSG_DOC_DIRECTORY "${CMAKE_BINARY_DIR}/Doc/html/Full")
+ELSE()
+  SET(OSG_OpenSG_DOC_DIRECTORY "${CMAKE_BINARY_DIR}/Doc/html/Glue")
+ENDIF()
+
+FILE(MAKE_DIRECTORY ${OSG_OpenSG_DOC_DIRECTORY})
+
+SET(OSG_DOC_BASIC_INPUT "${CMAKE_BINARY_DIR}/Doc/Include/OSGFullDoc.include")
+SET(OSG_DOC_GENERAL_INPUT "${CMAKE_BINARY_DIR}/Doc/Include/OSGGeneralDoc.include")
+
+IF(NOT OSG_GENERATE_SEPARATE_LIB_DOC)
+  SET(OSG_DOC_SECTION "all_in_one")
+ELSE()
+  SET(OSG_DOC_SECTION "separate")
+ENDIF()
+
 # write doxygen config file
 CONFIGURE_FILE("${OSG_DOXY_CONFIGURATION_FILE_IN}"
                "${OSG_DOXY_CONFIGURATION_FILE}")
+
+SET(OSG_DOC_BASIC_INPUT "${CMAKE_BINARY_DIR}/Doc/Include/OSGDummy.include")
+
+# find/process documentation include files
+FILE(GLOB OSG_DOC_INCLUDES "${CMAKE_SOURCE_DIR}/Doc/Include/*.include")
+
+FOREACH(_OSG_DOC_INCLUDE_FULL ${OSG_DOC_INCLUDES})
+
+  GET_FILENAME_COMPONENT(_OSG_DOC_INCLUDE ${_OSG_DOC_INCLUDE_FULL} NAME)
+
+  CONFIGURE_FILE("${_OSG_DOC_INCLUDE_FULL}"
+                 "${CMAKE_BINARY_DIR}/Doc/Include/${_OSG_DOC_INCLUDE}")
+
+ENDFOREACH()
 
 IF(OSG_DOXY_INPUTS)
     FILE(APPEND ${OSG_DOXY_CONFIGURATION_FILE}
@@ -971,10 +1505,12 @@ IF(OSG_DOXY_STDOUT_LOG)
 ENDIF(OSG_DOXY_STDOUT_LOG)
 
 IF(DOXYGEN_EXECUTABLE)
-  ADD_CUSTOM_TARGET(Doc
-                    VERBATIM
-                    COMMAND ${DOXYGEN_EXECUTABLE} ${OSG_DOXY_CONFIGURATION_FILE} ${OSG_DOC_PIPES})
-ENDIF(DOXYGEN_EXECUTABLE)
+    IF(NOT OSG_GENERATE_SEPARATE_LIB_DOC)
+        ADD_CUSTOM_TARGET(Doc
+            VERBATIM
+            COMMAND ${DOXYGEN_EXECUTABLE} ${OSG_DOXY_CONFIGURATION_FILE} ${OSG_DOC_PIPES})
+    ENDIF()
+ENDIF()
 
 ##################
 # osg2-config
@@ -1059,7 +1595,137 @@ INSTALL(FILES "${CMAKE_BINARY_DIR}/OpenSGExtDep.cmake"
 INSTALL(DIRECTORY "${CMAKE_SOURCE_DIR}/Tools/fcd2code"
         DESTINATION bin
         COMPONENT development_tools
-        PATTERN *.pyc EXCLUDE)
+        PATTERN "*.pyc" EXCLUDE
+        PATTERN ".svn"  EXCLUDE)
+
+##################
+# Global Python
+##################
+
+IF(OSGBUILD_PYTHON_BINDINGS)
+  EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} Python/Helper/genLibOrder.py
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  OUTPUT_VARIABLE _OSG_LIBORDER)
+
+  SET(_OSG_PY_MOD_LIST "osg2ModuleList = [\n")
+
+  FOREACH(_OSG_LIB ${_OSG_LIBORDER})
+    STRING(REPLACE "\n" "" _OSG_LIB ${_OSG_LIB})
+    SET(OSG_PYTHON_ALL_IMPORTS "${OSG_PYTHON_ALL_IMPORTS}from ..${_OSG_LIB} import *\n")
+    SET(_OSG_PY_MOD_LIST "${_OSG_PY_MOD_LIST}  ${_OSG_LIB}Py,\n")
+  ENDFOREACH()
+
+  SET(OSG_PYTHON_ALL_IMPORTS "${OSG_PYTHON_ALL_IMPORTS}\n\n${_OSG_PY_MOD_LIST}  ]\n\n")
+
+  SET(_OSG_GEN_INIT_FILE_IN  "${CMAKE_SOURCE_DIR}/Bindings/Python/osg.__init__.py.in")
+  SET(_OSG_GEN_INIT_FILE_OUT "${CMAKE_SOURCE_DIR}/Bindings/Python/module/__init__.py")
+
+  CONFIGURE_FILE("${_OSG_GEN_INIT_FILE_IN}"
+                 "${_OSG_GEN_INIT_FILE_OUT}")
+
+  IF(WIN32) 
+
+    SET(_OSG_TARGET_PYLIBDIR    lib/python/${_OSG_ISC}rel/osg2)
+    SET(_OSG_TARGET_PYLIBDIR_D  lib/python/${_OSG_ISC}debug/osg2)
+    SET(_OSG_TARGET_PYLIBDIR_RN lib/python/${_OSG_ISC}relnoopt/osg2)
+    SET(_OSG_TARGET_PYLIBDIR_DO lib/python/${_OSG_ISC}debugopt/osg2)
+
+    INSTALL(FILES          ${_OSG_GEN_INIT_FILE_OUT} 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR}/osg
+            CONFIGURATIONS Release)
+
+    INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+            DESTINATION ${_OSG_TARGET_PYLIBDIR_D}/osg
+              CONFIGURATIONS Debug)
+
+    INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+            DESTINATION ${_OSG_TARGET_PYLIBDIR_DO}/osg
+            CONFIGURATIONS DebugOpt)
+
+    INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+            DESTINATION ${_OSG_TARGET_PYLIBDIR_RN}/osg
+            CONFIGURATIONS ReleaseNoOpt)
+
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/osg2/__init__.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR}
+            CONFIGURATIONS Release)
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/__init__.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR}/helpers
+            CONFIGURATIONS Release)
+
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/osg2/__init__.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_D}
+            CONFIGURATIONS Debug)
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/__init__.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_D}/helpers
+            CONFIGURATIONS Debug)
+
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/osg2/__init__.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_DO}
+            CONFIGURATIONS DebugOpt)
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/__init__.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_DO}/helpers
+            CONFIGURATIONS DebugOpt)
+
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/osg2/__init__.py
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_RN}
+            CONFIGURATIONS ReleaseNoOpt)
+
+    INSTALL(FILES          ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/__init__.py
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py 
+                           ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py 
+            DESTINATION    ${_OSG_TARGET_PYLIBDIR_RN}/helpers
+            CONFIGURATIONS ReleaseNoOpt)
+
+  ELSE(WIN32)   
+
+    GET_FILENAME_COMPONENT(_PY_VERSION_DIR ${PYTHON_INCLUDE_PATH} NAME)
+    SET(_OSG_PY_INST_BASE 
+        "lib${OSG_LIBDIR_BASE_SUFFIX}/${_PY_VERSION_DIR}/site-packages/${OSG_LIBDIR_BUILD_TYPE_SUFFIX}/osg2")
+
+    INSTALL(FILES       ${_OSG_GEN_INIT_FILE_OUT} 
+            DESTINATION ${_OSG_PY_INST_BASE}/osg)
+
+    INSTALL(FILES       ${CMAKE_SOURCE_DIR}/Bindings/Python/osg2/__init__.py 
+            DESTINATION ${_OSG_PY_INST_BASE})
+
+    INSTALL(FILES       ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/__init__.py 
+                        ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/helpers.py 
+                        ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/cored_node.py 
+                        ${CMAKE_SOURCE_DIR}/Bindings/Python/helpers/fcd_reflector.py 
+            DESTINATION ${_OSG_PY_INST_BASE}/helpers)
+
+  ENDIF(WIN32)
+
+ENDIF()
+
+##################
+# Documentation
+##################
+IF(DOXYGEN_EXECUTABLE)
+    IF(OSG_INSTALL_DOXYDOC)
+        INSTALL(DIRECTORY "${OSG_DOXY_HTML_DIR}"
+                DESTINATION share/OpenSG/documentation
+                COMPONENT documentation)
+    ENDIF()
+ENDIF()
 
 ##################
 # Images/Icons
@@ -1262,7 +1928,14 @@ IF(OSGBUILD_ENABLE_PACKAGING)
     ENDIF(OSGBUILD_PACKAGE_TYPE STREQUAL "")
 
     STRING(TOUPPER ${OSGBUILD_PACKAGE_TYPE} CPACK_GENERATOR)
-    STRING(TOLOWER ${OSGBUILD_PACKAGE_TYPE} PACK_EXT)
+
+    IF(${CPACK_GENERATOR} STREQUAL "TBZ2")
+        SET( PACK_EXT "tar.bz2" )
+    ELSEIF(${CPACK_GENERATOR} STREQUAL "TGZ")
+        SET( PACK_EXT "tar.gz" )
+    ELSE()
+        STRING(TOLOWER ${OSGBUILD_PACKAGE_TYPE} PACK_EXT)
+    ENDIF()
 
     SET(PACKAGE "${CPACK_PACKAGE_FILE_NAME}.${PACK_EXT}")
     SET(OUTFILE "${CPACK_PACKAGE_FILE_NAME}-${BUILDNAME}-${DATE}.${PACK_EXT}")

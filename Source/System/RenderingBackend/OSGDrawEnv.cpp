@@ -49,6 +49,30 @@
 
 OSG_USING_NAMESPACE
 
+/*! \class OSG::OpenGLState
+    \ingroup GrpSystemRenderingBackend
+ */
+
+OpenGLState::OpenGLState(void) :
+#ifdef OSG_OGL_COREONLY
+    _mModelViewProjection(),
+    _mNormalMatrix       (),
+#endif
+    _mProjection         (),
+    _mModelView          ()
+{
+#ifdef OSG_OGL_COREONLY
+    _mModelViewProjection.setIdentity();
+    _mNormalMatrix       .setIdentity();
+#endif
+    _mProjection         .setIdentity();
+    _mModelView          .setIdentity();
+}
+
+OpenGLState::~OpenGLState(void)
+{
+}
+
 /*! \class OSG::DrawEnv
     \ingroup GrpSystemRenderingBackend
  */
@@ -58,7 +82,6 @@ OSG_USING_NAMESPACE
 
 DrawEnv::DrawEnv(void) :
     _pRenderAction          (NULL ),
-    _cameraFullProjection   (     ),
     _cameraProjection       (     ),
     _cameraProjectionTrans  (     ),
     _cameraViewing          (     ),
@@ -82,18 +105,23 @@ DrawEnv::DrawEnv(void) :
     _iPixelTop              (    1),
     _bFull                  ( true),
 
+    _iDrawerId              (-1   ),
+    _iDrawableId            (-1   ),
+
     _uiLightState           (    0),
 
     _pWindow                (NULL ),
+    _pSGNode                (NULL ),
+
     _pActiveState           (NULL ),
     _pActiveStateOverride   (NULL ),
     _uiNumStateChanges      (0    ),
     _uiNumShaderChanges     (0    ),
     _uiNumShaderParamChanges(0    ),
     _pStatCollector         (NULL ),
-    _uiActiveShader         (0    )
+    _uiActiveShader         (0    ),
+    _uiRequiredOGLFeature   (0    )
 {
-    _cameraFullProjection   .setIdentity();
     _cameraProjection       .setIdentity();
     _cameraProjectionTrans  .setIdentity();
     _cameraViewing          .setIdentity();
@@ -117,7 +145,7 @@ DrawEnv::~DrawEnv(void)
 {
 }
 
-Matrixr DrawEnv::calcTileDecorationMatrix(void) const
+Matrix DrawEnv::calcTileDecorationMatrix(void) const
 {
     Vec4f vTileRegion = this->getTileRegion();
 
@@ -344,7 +372,7 @@ void DrawEnv::activate(State         *pState,
     StateOverride::ChunkStoreIt          overIt = pOverride->begin();
 
     Int32                     ind  = 0;
-    UInt32                    cind = osgMin(State::SkipNumChunks, 
+    SizeT                     cind = osgMin(State::SkipNumChunks, 
                                             pState->getMFChunks()->size());
 
 
@@ -771,7 +799,7 @@ void DrawEnv::deactivate(State         *pState,
     StateOverride::ChunkStoreIt          overIt = pOverride->begin();
 
     Int32                     ind  = 0;
-    UInt32                    cind = osgMin(State::SkipNumChunks, 
+    SizeT                     cind = osgMin(State::SkipNumChunks, 
                                             pState->getMFChunks()->size());
 
     OSG_SKIP_IT(cIt, cind);

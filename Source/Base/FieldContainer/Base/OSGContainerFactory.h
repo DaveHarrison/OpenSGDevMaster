@@ -45,10 +45,8 @@
 #include "OSGBaseTypes.h"
 #include "OSGFactoryController.h"
 #include "OSGFactoryBase.h"
-#ifndef OSG_EMBEDDED
 #include "OSGLock.h"
 #include "OSGThreadManager.h"
-#endif
 #include "OSGLog.h"
 #include "OSGContainerForwards.h"
 
@@ -130,6 +128,9 @@ class ContainerFactory : public FactoryBase
     ContainerTransitPtr createFieldContainer(const Char8 *szName);
 #endif
 
+    virtual bool initializePendingElements           (void);
+    virtual bool initializePendingElementsFactoryPost(void);
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                      Set                                     */
@@ -208,9 +209,7 @@ class ContainerFactory : public FactoryBase
     UninitTypeStore  _vUnitTypesStore;
     UninitTypeStore  _vPostUnitTypes;
 
-#ifndef OSG_EMBEDDED
     LockRefPtr       _pLock;
-#endif
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -226,13 +225,10 @@ class ContainerFactory : public FactoryBase
     /*! \name                      Changed                                 */
     /*! \{                                                                 */
 
-    virtual bool initializePendingElements(void);
-
     virtual bool initialize(void);
     virtual bool terminate (void);
 
-    virtual bool initializeFactoryPost               (void);
-    virtual bool initializePendingElementsFactoryPost(void);
+    virtual bool initializeFactoryPost(void);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

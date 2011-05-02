@@ -41,13 +41,24 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaInstantiableElement.h"
 #include "OSGColladaElementFactoryHelper.h"
+#include "OSGColladaInstInfo.h"
 #include "OSGMaterial.h"
 
 OSG_BEGIN_NAMESPACE
+
+// forward decl
+class ColladaInstanceMaterial;
+
+// forward decl
+class ColladaInstanceMaterial;
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaMaterial : public ColladaInstantiableElement
 {
@@ -62,6 +73,53 @@ class OSG_FILEIO_DLLMAPPING ColladaMaterial : public ColladaInstantiableElement
 
     OSG_GEN_INTERNAL_MEMOBJPTR(ColladaMaterial);
 
+    class ColladaMaterialInstInfo : public ColladaInstInfo
+    {
+        /*==========================  PUBLIC  =============================*/
+      public:
+        /*-----------------------------------------------------------------*/
+        /*! \name Types                                                    */
+        /*! \{                                                             */
+
+        typedef ColladaInstInfo          Inherited;
+        typedef ColladaMaterialInstInfo  Self;
+
+        OSG_GEN_INTERNAL_MEMOBJPTR(ColladaMaterialInstInfo);
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+        /*! \name Create                                                   */
+        /*! \{                                                             */
+
+        static  ColladaInstInfoTransitPtr
+            create(ColladaElement          *colInstParent,
+                   ColladaInstanceMaterial *colInst       );
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+        /*! \name Process                                                  */
+        /*! \{                                                             */
+
+        virtual void process(void);
+
+        /*! \}                                                             */
+        /*=========================  PROTECTED  ===========================*/
+      protected:
+        /*-----------------------------------------------------------------*/
+        /*! \name Constructors/Destructor                                  */
+        /*! \{                                                             */
+
+                 ColladaMaterialInstInfo(
+                     ColladaElement          *colInstParent,
+                     ColladaInstanceMaterial *colInst       );
+        virtual ~ColladaMaterialInstInfo(void               );
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+    };
+
+    OSG_GEN_MEMOBJPTR(ColladaMaterialInstInfo);
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name Create                                                       */
@@ -75,8 +133,8 @@ class OSG_FILEIO_DLLMAPPING ColladaMaterial : public ColladaInstantiableElement
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void      read          (void                            );
-    virtual Material *createInstance(ColladaInstanceElement *instElem);
+    virtual void      read          (ColladaElement  *colElemParent);
+    virtual Material *createInstance(ColladaInstInfo *colInstInfo  );
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/

@@ -271,107 +271,107 @@ SimpleSHLChunkBase::TypeObject SimpleSHLChunkBase::_type(
     "<?xml version=\"1.0\"?>\n"
     "\n"
     "<FieldContainer\n"
-    "   name=\"SimpleSHLChunk\"\n"
-    "   parent=\"ShaderProgramChunk\"\n"
-    "   library=\"System\"\n"
-    "   pointerfieldtypes=\"both\"\n"
-    "   structure=\"concrete\"\n"
-    "   systemcomponent=\"true\"\n"
-    "   parentsystemcomponent=\"true\"\n"
-    "   decoratable=\"false\"\n"
-    "   useLocalIncludes=\"false\"\n"
-    "   docGroupBase=\"GrpSystemShader\"\n"
-    "   >\n"
-    "  <Field\n"
-    "\t name=\"vertexProgram\"\n"
-    "\t type=\"std::string\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    name=\"SimpleSHLChunk\"\n"
+    "    parent=\"ShaderProgramChunk\"\n"
+    "    library=\"System\"\n"
+    "    pointerfieldtypes=\"both\"\n"
+    "    structure=\"concrete\"\n"
+    "    systemcomponent=\"true\"\n"
+    "    parentsystemcomponent=\"true\"\n"
+    "    decoratable=\"false\"\n"
+    "    useLocalIncludes=\"false\"\n"
+    "    docGroupBase=\"GrpSystemShader\"\n"
+    "    >\n"
+    "    <Field\n"
+    "        name=\"vertexProgram\"\n"
+    "        type=\"std::string\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tvertex program source\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"geometryProgram\"\n"
-    "\t type=\"std::string\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"geometryProgram\"\n"
+    "        type=\"std::string\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tgeometry program source\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"fragmentProgram\"\n"
-    "\t type=\"std::string\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"fragmentProgram\"\n"
+    "        type=\"std::string\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tfragment program source\n"
-    "  </Field>\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"cgFrontEnd\"\n"
-    "\t type=\"bool\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"false\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
-    "  </Field>\n"
+    "    <Field\n"
+    "        name=\"cgFrontEnd\"\n"
+    "        type=\"bool\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"false\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"variables\"\n"
-    "\t type=\"ShaderProgramVariables\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t access=\"public\"\n"
-    "     category=\"childpointer\"\n"
-    "     childParentType=\"FieldContainer\"\n"
-    "     linkParentField=\"Parents\"\n"
-    "\t >\n"
+    "    <Field\n"
+    "        name=\"variables\"\n"
+    "        type=\"ShaderProgramVariables\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        access=\"public\"\n"
+    "        category=\"childpointer\"\n"
+    "        childParentType=\"FieldContainer\"\n"
+    "        linkParentField=\"Parents\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"variableLocations\"\n"
-    "\t type=\"Int32\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"protected\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"variableLocations\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  <Field\n"
-    "\t name=\"proceduralVariableLocations\"\n"
-    "\t type=\"Int32\"\n"
-    "\t cardinality=\"multi\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"protected\"\n"
-    "\t >\n"
+    "    </Field>\n"
+    "    <Field\n"
+    "        name=\"proceduralVariableLocations\"\n"
+    "        type=\"Int32\"\n"
+    "        cardinality=\"multi\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"protected\"\n"
+    "        >\n"
     "\tfragment program object\n"
-    "  </Field>\n"
-    "  \n"
-    "  <Field\n"
-    "\t name=\"GLId\"\n"
-    "\t type=\"UInt32\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"internal\"\n"
-    "\t access=\"public\"\n"
-    "\t defaultValue=\"0\"\n"
-    "     fieldFlags=\"FClusterLocal\"\n"
-    "\t >\n"
-    "  </Field>\n"
+    "    </Field>\n"
+    "    \n"
+    "    <Field\n"
+    "        name=\"GLId\"\n"
+    "        type=\"UInt32\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"internal\"\n"
+    "        access=\"public\"\n"
+    "        defaultValue=\"0\"\n"
+    "        fieldFlags=\"FClusterLocal\"\n"
+    "        >\n"
+    "    </Field>\n"
     "\n"
-    "  <Field\n"
-    "\t name=\"pointSize\"\n"
-    "\t type=\"bool\"\n"
-    "\t cardinality=\"single\"\n"
-    "\t visibility=\"external\"\n"
-    "\t defaultValue=\"false\"\n"
-    "\t access=\"public\"\n"
-    "\t >\n"
+    "    <Field\n"
+    "        name=\"pointSize\"\n"
+    "        type=\"bool\"\n"
+    "        cardinality=\"single\"\n"
+    "        visibility=\"external\"\n"
+    "        defaultValue=\"false\"\n"
+    "        access=\"public\"\n"
+    "        >\n"
     "\tFlag to set whether the shader can change the point size.\n"
-    "  </Field>\n"
+    "    </Field>\n"
     "\n"
     "</FieldContainer>\n",
     ""
@@ -614,38 +614,47 @@ void SimpleSHLChunkBase::copyFromBin(BinaryDataHandler &pMem,
 
     if(FieldBits::NoField != (VertexProgramFieldMask & whichField))
     {
+        editSField(VertexProgramFieldMask);
         _sfVertexProgram.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GeometryProgramFieldMask & whichField))
     {
+        editSField(GeometryProgramFieldMask);
         _sfGeometryProgram.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (FragmentProgramFieldMask & whichField))
     {
+        editSField(FragmentProgramFieldMask);
         _sfFragmentProgram.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (CgFrontEndFieldMask & whichField))
     {
+        editSField(CgFrontEndFieldMask);
         _sfCgFrontEnd.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (VariablesFieldMask & whichField))
     {
+        editSField(VariablesFieldMask);
         _sfVariables.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (VariableLocationsFieldMask & whichField))
     {
+        editMField(VariableLocationsFieldMask, _mfVariableLocations);
         _mfVariableLocations.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (ProceduralVariableLocationsFieldMask & whichField))
     {
+        editMField(ProceduralVariableLocationsFieldMask, _mfProceduralVariableLocations);
         _mfProceduralVariableLocations.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (GLIdFieldMask & whichField))
     {
+        editSField(GLIdFieldMask);
         _sfGLId.copyFromBin(pMem);
     }
     if(FieldBits::NoField != (PointSizeFieldMask & whichField))
     {
+        editSField(PointSizeFieldMask);
         _sfPointSize.copyFromBin(pMem);
     }
 }
@@ -824,7 +833,7 @@ bool SimpleSHLChunkBase::unlinkChild(
 
         if(pTypedChild != NULL)
         {
-            if(pTypedChild == _sfVariables.getValue())
+            if(_sfVariables.getValue() == pTypedChild)
             {
                 editSField(VariablesFieldMask);
 
@@ -833,8 +842,15 @@ bool SimpleSHLChunkBase::unlinkChild(
                 return true;
             }
 
-            FWARNING(("SimpleSHLChunkBase::unlinkParent: Child <-> "
-                      "Parent link inconsistent.\n"));
+            SWARNING << "Parent (["        << this
+                     << "] id ["           << this->getId()
+                     << "] type ["         << this->getType().getCName()
+                     << "] childFieldId [" << childFieldId
+                     << "]) - Child (["    << pChild
+                     << "] id ["           << pChild->getId()
+                     << "] type ["         << pChild->getType().getCName()
+                     << "]): link inconsistent!"
+                     << std::endl;
 
             return false;
         }

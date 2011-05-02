@@ -53,13 +53,16 @@
 
 OSG_BEGIN_NAMESPACE
 
-//! \ingroup GrpSystemRenderingBackend
-//! GraphOp class
+/*! \ingroup GrpUtilGraphOp
+    \ingroup GrpLibOSGUtil
+ */
 
 class OSG_UTIL_DLLMAPPING SharePtrGraphOp : public GraphOp
 {
     /*==========================  PUBLIC  =================================*/
+
   public:
+
     /*---------------------------------------------------------------------*/
     /*! \name Types                                                        */
     /*! \{                                                                 */
@@ -107,6 +110,7 @@ class OSG_UTIL_DLLMAPPING SharePtrGraphOp : public GraphOp
     /*! \}                                                                 */
     
     /*=========================  PROTECTED  ===============================*/
+
   protected:    
 
     /*---------------------------------------------------------------------*/
@@ -118,24 +122,25 @@ class OSG_UTIL_DLLMAPPING SharePtrGraphOp : public GraphOp
 
     /*! \}                                                                 */
     /*==========================  PRIVATE  ================================*/
+
   private:
 
     virtual Action::ResultE traverseEnter(Node            * const node );
     virtual Action::ResultE traverseLeave(Node            * const node,
                                           Action::ResultE         res  );
 
-    typedef std::set<UInt32          > FCIdSet;
-    typedef FCIdSet::iterator          FCIdSetIt;
-    typedef FCIdSet::const_iterator    FCIdSetConstIt;
+    typedef std::set<UInt32          >       FCIdSet;
+    typedef FCIdSet::iterator                FCIdSetIt;
+    typedef FCIdSet::const_iterator          FCIdSetConstIt;
     
-    typedef std::set<FieldContainer *> FCSet;
-    typedef FCSet::iterator            FCSetIt;
+    typedef std::set<FieldContainerUnrecPtr> FCSet;
+    typedef FCSet::iterator                  FCSetIt;
     
-    typedef std::map<UInt32, FCSet   > FCTypeMap;
-    typedef FCTypeMap::iterator        FCTypeMapIt;
+    typedef std::map<UInt32, FCSet   >       FCTypeMap;
+    typedef FCTypeMap::iterator              FCTypeMapIt;
     
-    typedef std::map<UInt32, UInt32  > ShareCount;
-    typedef ShareCount::iterator       ShareCountIt;
+    typedef std::map<UInt32, UInt32  >       ShareCount;
+    typedef ShareCount::iterator             ShareCountIt;
     
     FieldContainer *shareFC(FieldContainer *fc);
     
@@ -148,7 +153,7 @@ class OSG_UTIL_DLLMAPPING SharePtrGraphOp : public GraphOp
     FCIdSet    _includeSet;
     FCIdSet    _excludeSet;
 
-    FCIdSet    _visitedSet;
+//    FCIdSet    _visitedSet;
     
     ShareCount _shareCount;
     Time       _totalTime;

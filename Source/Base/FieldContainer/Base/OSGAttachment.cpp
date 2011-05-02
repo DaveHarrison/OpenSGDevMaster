@@ -2,7 +2,7 @@
  *                                OpenSG                                     *
  *                                                                           *
  *                                                                           *
- *           Copyright (C) 2003 by the OpenSG Forum                          *
+ *               Copyright (C) 2000-2006 by the OpenSG Forum                 *
  *                                                                           *
  *                            www.opensg.org                                 *
  *                                                                           *
@@ -49,244 +49,66 @@
 
 OSG_BEGIN_NAMESPACE
 
-/*-------------------------------------------------------------------------*/
-/*                               Fields                                    */
+// Documentation for this class is emitted in the
+// OSGAttachmentBase.cpp file.
+// To modify it, please change the .fcd file (OSGAttachment.fcd) and
+// regenerate the base file.
 
-void Attachment::classDescInserter(TypeObject &oType)
+/***************************************************************************\
+ *                           Class variables                               *
+\***************************************************************************/
+
+/***************************************************************************\
+ *                           Class methods                                 *
+\***************************************************************************/
+
+void Attachment::initMethod(InitPhase ePhase)
 {
-    FieldDescriptionBase *pDesc;
+    Inherited::initMethod(ePhase);
 
-    typedef MFParentFieldContainerPtr::Description SFDesc;
-
-    pDesc = new SFDesc(
-        MFParentFieldContainerPtr::getClassType(),
-        "parents",
-        "",
-        OSG_RC_FIELD_DESC(Self::Parents),
-        true,
-        Field::MFDefaultFlags,
-        static_cast<FieldEditMethodSig>(&Self::invalidEditField),
-        static_cast<FieldGetMethodSig >(&Self::getHandleParents));
-
-    oType.addInitialDesc(pDesc);
-
-
-    pDesc = new SFBool::Description(
-        SFBool::getClassType(),
-        "internal",
-        "",
-        OSG_RC_FIELD_DESC(Self::Internal),
-        false,
-        Field::SFDefaultFlags,
-        static_cast<FieldEditMethodSig>(&Self::editInternalHandler),
-        static_cast<FieldGetMethodSig >(&Self::getInternalHandler ));
-
-    oType.addInitialDesc(pDesc);
+    if(ePhase == TypeObject::SystemPost)
+    {
+    }
 }
 
-const Char8 *Attachment::getClassname(void)
-{
-    return "Attachment";
-}
 
-Attachment::TypeObject Attachment::_type(
-    Attachment::getClassname(),
-    Inherited ::getClassname(),
-    "FieldContainer",
-    0,
-    NULL,
-    NULL,
-    NULL,
-    reinterpret_cast<InitalInsertDescFunc>(&Attachment::classDescInserter),
-    false,
-    0);
+/***************************************************************************\
+ *                           Instance methods                              *
+\***************************************************************************/
 
-/*-------------------------------------------------------------------------*/
-/*                            Constructors                                 */
+/*-------------------------------------------------------------------------*\
+ -  private                                                                 -
+\*-------------------------------------------------------------------------*/
+
+/*----------------------- constructors & destructors ----------------------*/
 
 Attachment::Attachment(void) :
-     Inherited (     ),
-    _mfParents (     ),
-    _sfInternal(false)
+    Inherited()
 {
 }
 
 Attachment::Attachment(const Attachment &source) :
-
-     Inherited (source            ),
-    _mfParents (                  ),
-    _sfInternal(source._sfInternal)
+    Inherited(source)
 {
 }
-/*-------------------------------------------------------------------------*/
-/*                             Destructor                                  */
 
 Attachment::~Attachment(void)
 {
 }
 
-OSG_ABSTR_FIELD_CONTAINER_DEF(Attachment)
+/*----------------------------- class specific ----------------------------*/
 
-
-bool Attachment::linkParent  (FieldContainer * const pParent,
-                              UInt16           const childFieldId,
-                              UInt16           const parentFieldId)
+void Attachment::changed(ConstFieldMaskArg whichField, 
+                            UInt32            origin,
+                            BitVector         details)
 {
-    if(parentFieldId == ParentsFieldId)
-    {
-        FieldContainer *pTypedParent =
-             dynamic_cast<FieldContainer *>(pParent);
-        
-        if(pTypedParent != NULL)
-        {
-            editMField(ParentsFieldMask, _mfParents);
-
-            _mfParents.push_back(pParent, childFieldId);
-            
-            return true;
-        }
-    
-        return false;
-    }
-    
-    return Inherited::linkParent(pParent, childFieldId, parentFieldId);
+    Inherited::changed(whichField, origin, details);
 }
 
-bool Attachment::unlinkParent(FieldContainer * const pParent,
-                              UInt16           const parentFieldId)
+void Attachment::dump(      UInt32    ,
+                         const BitVector ) const
 {
-    if(parentFieldId == ParentsFieldId)
-    {
-        FieldContainer *pTypedParent =
-            dynamic_cast<FieldContainer *>(pParent);
-            
-        if(pTypedParent != NULL)
-        {
-            Int32 iParentIdx  = _mfParents.findIndex(pParent);
-
-            if(iParentIdx != -1)
-            {
-                editMField(ParentsFieldMask, _mfParents);
-                
-                _mfParents.erase(iParentIdx);
-                
-                return true;
-            }
-             
-            FWARNING(("Attachment::unlinkParent: "
-                      "Child <-> Parent link inconsistent.\n"));
-            
-            return false;
-        }
-
-        return false;
-    }
-        
-    return Inherited::unlinkParent(pParent, parentFieldId);
+    SLOG << "Dump Attachment NI" << std::endl;
 }
- 
-
-/*-------------------------------------------------------------------------*/
-/*                             Assignment                                  */
-
-UInt32 Attachment::getBinSize(ConstFieldMaskArg whichField)
-{
-    UInt32 returnValue = Inherited::getBinSize(whichField);
-    
-    if(FieldBits::NoField != (ParentsFieldMask & whichField))
-    {
-        returnValue += _mfParents.getBinSize();
-    }
-    
-    if(FieldBits::NoField != (InternalFieldMask & whichField))
-    {
-        returnValue += _sfInternal.getBinSize();
-    }
-    
-    return returnValue;
-}
-
-void Attachment::copyToBin(BinaryDataHandler &pMem,
-                           ConstFieldMaskArg  whichField)
-{
-    Inherited::copyToBin(pMem, whichField);
-
-    if(FieldBits::NoField != (ParentsFieldMask & whichField))
-    {
-        _mfParents.copyToBin(pMem);
-    }
-    
-    if(FieldBits::NoField != (InternalFieldMask & whichField))
-    {
-        _sfInternal.copyToBin(pMem);
-    }
-}
-
-void Attachment::copyFromBin(BinaryDataHandler &pMem,
-                             ConstFieldMaskArg  whichField)
-{
-    Inherited::copyFromBin(pMem, whichField);
-
-    if(FieldBits::NoField != (ParentsFieldMask & whichField))
-    {
-        _mfParents.copyFromBin(pMem);
-    }
-
-    if(FieldBits::NoField != (InternalFieldMask & whichField))
-    {
-        _sfInternal.copyFromBin(pMem);
-    }
-}
-
-EditFieldHandlePtr Attachment::editInternalHandler(void)
-{
-    SFBool::EditHandlePtr returnValue(
-        new  SFBool::EditHandle(
-             &_sfInternal, 
-             this->getType().getFieldDesc(InternalFieldId),
-             this));
-
-    editSField(InternalFieldMask);
-
-    return returnValue;
-}
-
-GetFieldHandlePtr Attachment::getInternalHandler(void) const
-{
-    SFBool::GetHandlePtr returnValue(
-        new  SFBool::GetHandle(
-             &_sfInternal, 
-             this->getType().getFieldDesc(InternalFieldId),
-             const_cast<Self *>(this)));
-
-    return returnValue;
-}
-
-GetFieldHandlePtr Attachment::getHandleParents(void) const
-{
-    MFParentFieldContainerPtr::GetHandlePtr returnValue(
-        new  MFParentFieldContainerPtr::GetHandle(
-             &_mfParents, 
-             this->getType().getFieldDesc(ParentsFieldId),
-             const_cast<Self *>(this)));
-
-    return returnValue;
-}
-
-#ifdef OSG_MT_CPTR_ASPECT
-void Attachment::execSyncV(     
-          FieldContainer    &oFrom,
-          ConstFieldMaskArg  whichField,
-          AspectOffsetStore &oOffsets,
-          ConstFieldMaskArg  syncMode  ,
-    const UInt32             uiSyncInfo)
-{
-    this->execSync(static_cast<Attachment *>(&oFrom),
-                   whichField,
-                   oOffsets,
-                   syncMode,
-                   uiSyncInfo);
-}
-#endif
 
 OSG_END_NAMESPACE

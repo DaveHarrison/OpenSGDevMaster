@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<FieldContainer
+   name="SkinnedGeometry"
+   parent="Geometry"
+   library="Dynamics"
+   pointerfieldtypes="both"
+   structure="concrete"
+   systemcomponent="true"
+   parentsystemcomponent="true"
+   decoratable="false"
+   childFields="none"
+   parentFields="both"
+>
+
+  <Field
+     name="skeleton"
+     type="Skeleton"
+     category="pointer"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     >
+    The Skeleton that deforms this geometry.
+  </Field>
+
+  <Field
+     name="bindShapeMatrix"
+     type="Matrix"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     >
+    Matrix that is applied to the vertices of the mesh before deformation.
+    It transforms the vertices into bind space.
+  </Field>
+
+  <Field
+     name="jointIds"
+     type="Int16"
+     category="data"
+     cardinality="multi"
+     visibility="external"
+     access="public"
+     >
+    List of jointIds that are used by this SkinnedGeometry.
+  </Field>
+
+  <Field
+     name="jointIndexProperty"
+     type="UInt16"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="TypeTraits&lt;UInt16&gt;::getMax()"
+     >
+    Index of the property that stores the joint indices that influence
+    a vertex.
+  </Field>
+  
+  <Field
+     name="jointWeightProperty"
+     type="UInt16"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="TypeTraits&lt;UInt16&gt;::getMax()"
+     >
+    Index of the property that stores the joint weights that influence
+    a vertex.
+  </Field>
+
+  <Field
+     name="renderMode"
+     type="UInt32"
+     category="data"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="0"
+     >
+    Mode used to render this skinned geometry, one of the RenderModeE
+    enums values. Effectively selects the SkinningAlgorithm to use.
+  </Field>
+
+  <Field
+     name="skinningAlgorithm"
+     type="SkinningAlgorithm"
+     category="childpointer"
+     linkParentField="Skin"
+     cardinality="single"
+     visibility="external"
+     access="protected"
+     defaultValue="NULL"
+     >
+  </Field>
+
+</FieldContainer>

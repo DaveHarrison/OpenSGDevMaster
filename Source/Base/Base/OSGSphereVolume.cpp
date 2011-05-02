@@ -54,34 +54,21 @@
 
 OSG_BEGIN_NAMESPACE
 
-#if 0
-/*! Return a sphere containing a given box */
-void SphereVolume::circumscribe(const BoxVolume &box)
-{
-    float radius = 0.5 * (box.getMax() - box.getMin()).length();
-    Vec3f center;
-
-    box.getCenter(center);
-
-    setValue(center, radius);
-}
-#endif
-
 /*! Returns the center */
 
-void SphereVolume::getCenter(Pnt3r &center) const
+void SphereVolume::getCenter(Pnt3f &center) const
 {
     center = _center;
 }
 
 
-Real SphereVolume::getScalarVolume (void) const
+Real32 SphereVolume::getScalarVolume (void) const
 {
     return isEmpty() ? 0.0f : (4.f / 3.f * Pi * _radius * _radius * _radius);
 }
 
 
-void SphereVolume::getBounds(Pnt3r &min, Pnt3r &max) const
+void SphereVolume::getBounds(Pnt3f &min, Pnt3f &max) const
 {
     min.setValues(_center[0] - _radius,
                   _center[1] - _radius,
@@ -92,7 +79,7 @@ void SphereVolume::getBounds(Pnt3r &min, Pnt3r &max) const
 }
 
 
-void SphereVolume::extendBy(const Pnt3r &pt)
+void SphereVolume::extendBy(const Pnt3f &pt)
 {
     if(isUntouchable() == true)
         return;
@@ -106,7 +93,7 @@ void SphereVolume::extendBy(const Pnt3r &pt)
     }
     else
     {
-        Real d = (_center - pt).length();
+        Real32 d = (_center - pt).length();
         
         if(d > _radius)
             _radius = d;
@@ -123,9 +110,9 @@ void SphereVolume::extendBy(const Volume &volume)
 
 /*! Returns true if intersection of given point and Volume is not empty */
 
-bool SphereVolume::intersect(const Pnt3r &point) const
+bool SphereVolume::intersect(const Pnt3f &point) const
 {
-    Real d = (_center - point).length();
+    Real32 d = (_center - point).length();
 
     if(d <= _radius)
         return true;
@@ -142,9 +129,9 @@ bool SphereVolume::intersect(const Line &line) const
 
 /*! intersect the SphereVolume with the given Line */
 
-bool SphereVolume::intersect(const Line &line,
-                                   Real &enter, 
-                                   Real &exit ) const
+bool SphereVolume::intersect(const Line   &line,
+                                   Real32 &enter, 
+                                   Real32 &exit ) const
 {
     return line.intersect(*this, enter, exit);
 }
@@ -156,10 +143,10 @@ bool SphereVolume::intersect(const Volume &volume) const
 }
 
 
-bool SphereVolume::isOnSurface (const Pnt3r &point) const
+bool SphereVolume::isOnSurface (const Pnt3f &point) const
 {
     if(osgAbs((point - _center).length() - _radius) <
-       TypeTraits<Real>::getDefaultEps())
+       TypeTraits<Real32>::getDefaultEps())
     {
         return true;
     }
@@ -172,12 +159,12 @@ bool SphereVolume::isOnSurface (const Pnt3r &point) const
 
 /*-------------------------- transformation -------------------------------*/
 
-void SphereVolume::transform(const Matrixr &mat)
+void SphereVolume::transform(const Matrix &mat)
 {
     // assume uniform scaling, otherways we get an ellipsoid
-    Pnt3r hull(_center);
+    Pnt3f hull(_center);
 
-    hull += Vec3r(0.f, _radius, 0.f);
+    hull += Vec3f(0.f, _radius, 0.f);
 
     mat.mult(_center, _center);
     mat.mult(hull,    hull   );

@@ -51,6 +51,51 @@
 
 OSG_BEGIN_NAMESPACE
 
+template<typename ValueT>
+class StringValueMapper
+{
+    /*==========================  PUBLIC  =================================*/
+
+  public:
+
+    const std::string &toString        (const ValueT       eval) const;
+          ValueT       fromString      (const Char8       *sval) const;
+
+          void         addToValuePair  (const std::string &sval, 
+                                        const      ValueT   val);
+          void         addFromValuePair(const      ValueT   val, 
+                                        const std::string &sval);
+
+    /*=========================  PROTECTED  ===============================*/
+
+  protected:
+
+    typedef std::map<std::string,      ValueT> MapToValue;
+    typedef std::map<     ValueT, std::string> MapFromValue; 
+
+    MapToValue   _mToValue;
+    MapFromValue _mFromValue;
+
+    static const std::string szUnknown;
+
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Constructors                               */
+    /*! \{                                                                 */
+
+    StringValueMapper(void);
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Destructors                                */
+    /*! \{                                                                 */
+
+    virtual ~StringValueMapper(void);
+
+    /*==========================  PRIVATE  ================================*/
+
+  private:
+};
+
 /*! \brief Accessible via #GLDefineMapper
     \ingroup GrpBaseBase
     \ingroup GrpBaseBaseGL
@@ -58,45 +103,23 @@ OSG_BEGIN_NAMESPACE
     \nohierarchy
  */
 
-class OSG_BASE_DLLMAPPING GLDefineMapperBase
+class OSG_BASE_DLLMAPPING GLDefineMapperBase : 
+    public StringValueMapper<GLenum>
 {
     /*==========================  PUBLIC  =================================*/
 
   public:
 
-    const std::string &toString  (const GLenum  eval) const;
-          GLenum       fromString(const Char8  *sval) const;
+    GLenum fromString     (const      Char8  *sval) const;
 
-
-    void addToEnumPair  (const std::string &sval, const      GLenum  eval);
-    void addFromEnumPair(const      GLenum  eval, const std::string &sval);
+    void   addToEnumPair  (const std::string &sval, const      GLenum  eval);
+    void   addFromEnumPair(const      GLenum  eval, const std::string &sval);
 
     /*=========================  PROTECTED  ===============================*/
 
   protected:
 
-#if 0
-    struct GLEnum
-    {
-        GLEnum(const GLenum val);
-
-        GLenum val(void) const;
-
-        bool operator <(const GLEnum &rhs) const;
-
-      protected:
-
-        GLenum _val;
-    };
-#endif
-
-    typedef std::map<std::string,      GLenum> MapToEnum;
-    typedef std::map<     GLenum, std::string> MapFromEnum; 
-
-    static const std::string szUnknown;
-
-    MapToEnum   _mToEnum;
-    MapFromEnum _mFromEnum;
+    typedef StringValueMapper<GLenum> Inherited;
 
     /*---------------------------------------------------------------------*/
     /*! \name                   Constructors                               */
@@ -127,12 +150,6 @@ class OSG_BASE_DLLMAPPING GLDefineMapperBase
     friend class SingletonHolder;
 };
 
-#if defined(WIN32)
-#    if !defined(OSG_COMPILE_GLDEFINEMAPPER)
-//OSG_BASE_EXPIMP_TMPL 
-//template class OSG_BASE_DLLMAPPING SingletonHolder<GLDefineMapperBase>;
-#    endif
-#endif
 
 /*! \typedef OSG::SingletonHolder<GLDefineMapperBase> GLDefineMapper;
     \ingroup GrpBaseBaseGL
@@ -143,6 +160,6 @@ typedef SingletonHolder<GLDefineMapperBase> GLDefineMapper;
 
 OSG_END_NAMESPACE
 
-#include "OSGGLDefineMapper.inl"
+#include <OSGGLDefineMapper.inl>
 
 #endif // _OSGGLDEFINEMAPPER_H_

@@ -42,7 +42,7 @@
 
 #include "OSGColladaOptions.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGIOFileTypeBase.h"
@@ -57,7 +57,13 @@ ColladaOptions::parseOptions(const OptionSet &optSet)
     IOFileTypeBase::getOptionAs<bool>(
         optSet, "invertTransparency", _invertTransparency);
     IOFileTypeBase::getOptionAs<bool>(
+        optSet, "mergeTransforms", _mergeTransforms);
+    IOFileTypeBase::getOptionAs<bool>(
         optSet, "createNameAttachments", _createNameAttachments);
+    IOFileTypeBase::getOptionAs<bool>(
+        optSet, "loadAnimations", _loadAnimations);
+    IOFileTypeBase::getOptionAs<bool>(
+        optSet, "loadLights", _loadLights);
 }
 
 /*! Return \c true if transparency values should be inverted, \c false
@@ -81,6 +87,25 @@ ColladaOptions::setInvertTransparency(bool value)
     _invertTransparency = value;
 }
 
+/*! Return \c true if transform tags within a single collada <node> tag
+    should be merge, \c false if they should be preserved as individual
+    Nodes in OpenSG.
+ */
+bool
+ColladaOptions::getMergeTransforms(void) const
+{
+    return _mergeTransforms;
+}
+
+/*! Set if transform tags should be merged.
+    Options name: "mergeTransforms".
+ */
+void
+ColladaOptions::setMergeTransforms(bool value)
+{
+    _mergeTransforms = value;
+}
+
 /*! Return \c true if NameAttachments should be created, \c false otherwise.
     Option name: "createNameAttachments".
  */
@@ -99,10 +124,37 @@ ColladaOptions::setCreateNameAttachments(bool value)
     _createNameAttachments = value;
 }
 
+bool
+ColladaOptions::getLoadAnimations(void) const
+{
+    return _loadAnimations;
+}
+
+void
+ColladaOptions::setLoadAnimations(bool value)
+{
+    _loadAnimations = value;
+}
+
+bool
+ColladaOptions::getLoadLights(void) const
+{
+    return _loadLights;
+}
+
+void
+ColladaOptions::setLoadLights(bool value)
+{
+    _loadLights = value;
+}
+
 ColladaOptions::ColladaOptions(void)
     : Inherited             ()
     , _invertTransparency   (false)
+    , _mergeTransforms      (true)
     , _createNameAttachments(true)
+    , _loadAnimations       (true)
+    , _loadLights           (true)
 {
 }
 

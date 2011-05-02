@@ -45,9 +45,10 @@
 
 #include "OSGBaseTypes.h"
 #include "OSGSystemDef.h"
-#include "OSGSystemProfile.h"
+#include "OSGMatrix.h"
 #include "OSGGLEXT.h"
 #include "OSGStatCollector.h"
+#include "OSGContainerForwards.h"
 
 #include <boost/function.hpp>
 
@@ -59,7 +60,76 @@ class Window;
 class State;
 class StateOverride;
 
-/*! \ingroup GrpSystemRenderingBackend
+/*! \ingroup GrpSystemRenderingBackendBase
+    \ingroup GrpLibOSGSystem
+
+   \brief Old OpenGL State Uniforms so this can be passed to the shader.
+ */
+
+class OpenGLState
+{
+    /*==========================  PUBLIC  =================================*/
+
+  public:
+
+    /*---------------------------------------------------------------------*/
+    /*! \name                     Types                                    */
+    /*! \{                                                                 */
+
+          void    setModelView          (const Matrix   &matrix);
+    const Matrix &getModelView          (      void            ) const;
+
+          void    setProjection         (const Matrix   &matrix);
+    const Matrix &getProjection         (      void            ) const;
+
+#ifdef OSG_OGL_COREONLY
+    const Matrix &getModelViewProjection(      void            ) const;
+    const Matrix &getNormalMatrix       (      void            ) const;
+#endif
+
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Constructors                               */
+    /*! \{                                                                 */
+
+    OpenGLState(void);
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Destructor                                 */
+    /*! \{                                                                 */
+
+    virtual ~OpenGLState(void);
+
+    /*! \}                                                                 */
+    /*! \}                                                                 */
+    /*=========================  PROTECTED  ===============================*/
+
+  protected:
+
+    /*---------------------------------------------------------------------*/
+    /*! \name                      Member                                  */
+    /*! \{                                                                 */
+
+#ifdef OSG_OGL_COREONLY
+    Matrix _mModelViewProjection;
+    Matrix _mNormalMatrix;
+#endif
+    Matrix _mProjection;
+    Matrix _mModelView;
+
+    /*! \}                                                                 */
+    /*==========================  PRIVATE  ================================*/
+
+  private:
+
+    /*! \brief prohibit default function (move to 'public' if needed) */
+    OpenGLState(const OpenGLState &source);
+    /*! \brief prohibit default function (move to 'public' if needed) */
+    void operator =(const OpenGLState &source);
+};
+
+/*! \ingroup GrpSystemRenderingBackendBase
+    \ingroup GrpLibOSGSystem
  */
 
 class OSG_SYSTEM_DLLMAPPING DrawEnv
@@ -67,58 +137,71 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
     /*==========================  PUBLIC  =================================*/
 
   public:
+
     /*---------------------------------------------------------------------*/
     /*! \name                     Types                                    */
     /*! \{                                                                 */
 
-    typedef boost::function<void (DrawEnv *)>  DrawFunctor;
+    typedef RenderFunctor    DrawFunctor;
 
-    typedef RenderActionBase                   RAction;
+    typedef RenderActionBase RAction;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                      Vars                                    */
+    /*! \{                                                                 */
+
+    OpenGLState _openGLState;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                   Statistic                                  */
     /*! \{                                                                 */
 
-    void   setWindow         (      Window   *pWindow       );
+    void   setWindow            (      Window   *pWindow       );
+    void   setSGNode            (      Node     *pSGNode       );
 
-    void   setupProjection   (const Matrixr  &projection,
-                              const Matrixr  &translation   );
-    void   setupViewing      (const Matrixr  &matrix        );
-    void   setObjectToWorld  (const Matrixr  &matrix        );
+    void   setupProjection      (const Matrix   &projection,
+                                 const Matrix   &translation   );
+    void   setupViewing         (const Matrix   &matrix        );
+    void   setObjectToWorld     (const Matrix   &matrix        );
 
-    void   setCameraNear     (const Real     &camNear       );
-    void   setCameraFar      (const Real     &camFar        );
+    void   setCameraNear        (const Real32   &camNear       );
+    void   setCameraFar         (const Real32   &camFar        );
 
-    void   setActiveTexTarget(      UInt32    uiSlot,
-                                    GLenum    uiTarget      );
+    void   setActiveTexTarget   (      UInt32    uiSlot,
+                                       GLenum    uiTarget      );
 
-    void   setActiveShader   (      UInt32    uiActiveShader);
-    UInt32 getActiveShader   (      void                    );
+    void   setActiveShader      (      UInt32    uiActiveShader);
+    UInt32 getActiveShader      (      void                    );
+
+    UInt32 getRequiredOGLFeature(      void                    );
+    void   addRequiredOGLFeature(      UInt32    uiFeatureMask );
+    void   subRequiredOGLFeature(      UInt32    uiFeatureMask );
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                    Access                                    */
     /*! \{                                                                 */
 
-    const Matrixr       &getCameraFullProjection (void         ) const;
-    const Matrixr       &getCameraProjection     (void         ) const;
-    const Matrixr       &getCameraProjectionTrans(void         ) const;
-    const Matrixr       &getCameraDecoration     (void         ) const;
+    const Matrix        &getCameraProjection     (void         ) const;
+    const Matrix        &getCameraProjectionTrans(void         ) const;
+    const Matrix        &getCameraDecoration     (void         ) const;
 
-    const Matrixr       &getCameraViewing        (void         ) const;
+    const Matrix        &getCameraViewing        (void         ) const;
 
     //CamViewing^-1
-    const Matrixr       &getCameraToWorld        (void         ) const;
+    const Matrix        &getCameraToWorld        (void         ) const;
 
-    const Matrixr       &getObjectToWorld        (void         ) const;
+    const Matrix        &getObjectToWorld        (void         ) const;
 
-    const Matrixr       &getWorldToScreen        (void         ) const;
+    const Matrix        &getWorldToScreen        (void         ) const;
 
-          Real           getCameraNear           (void         ) const;
-          Real           getCameraFar            (void         ) const;
+          Real32         getCameraNear           (void         ) const;
+          Real32         getCameraFar            (void         ) const;
 
           Window        *getWindow               (void         ) const;
+          Node          *getSGNode               (void         ) const;
 
           GLenum         getActiveTexTarget      (UInt32 uiSlot) const;
 
@@ -135,28 +218,28 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
     /*! \name                    Access                                    */
     /*! \{                                                                 */
 
-    const Matrixr  &getVPCameraFullProjection (void         ) const;
-    const Matrixr  &getVPCameraProjection     (void         ) const;
-    const Matrixr  &getVPCameraProjectionTrans(void         ) const;
+    const Matrix   &getVPCameraFullProjection (void         ) const;
+    const Matrix   &getVPCameraProjection     (void         ) const;
+    const Matrix   &getVPCameraProjectionTrans(void         ) const;
 
-    const Matrixr  &getVPCameraViewing        (void         ) const;
+    const Matrix   &getVPCameraViewing        (void         ) const;
 
     //VPCamViewing^-1
-    const Matrixr  &getVPCameraToWorld        (void         ) const; 
+    const Matrix   &getVPCameraToWorld        (void         ) const; 
 
-    const Matrixr  &getVPWorldToScreen        (void         ) const;
+    const Matrix   &getVPWorldToScreen        (void         ) const;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name                    Access                                    */
     /*! \{                                                                 */
 
-    void setVPCameraMatrices     (const Matrixr &mFullprojection,
-                                  const Matrixr &mProjection,
-                                  const Matrixr &mProjectionTrans,
-                                  const Matrixr &mViewing,
-                                  const Matrixr &mToWorld,
-                                  const Matrixr &mWorldToScreen  );
+    void setVPCameraMatrices     (const Matrix  &mFullprojection,
+                                  const Matrix  &mProjection,
+                                  const Matrix  &mProjectionTrans,
+                                  const Matrix  &mViewing,
+                                  const Matrix  &mToWorld,
+                                  const Matrix  &mWorldToScreen  );
     
     void initVPMatricesFromCamera(void                           );
 
@@ -216,7 +299,18 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
     const Vec2u   &getTileFullSize         (void                       ) const;
     const Vec4f   &getTileRegion           (void                       ) const;
 
-          Matrixr  calcTileDecorationMatrix(void                       ) const;
+          Matrix   calcTileDecorationMatrix(void                       ) const;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Constructors                               */
+    /*! \{                                                                 */
+
+    Int32 getDrawerId  (void     ) const;
+    void  setDrawerId  (Int32 iId);
+          
+    Int32 getDrawableId(void     ) const;
+    void  setDrawableId(Int32 iId);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -259,25 +353,24 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
 
     RAction       *_pRenderAction;
 
-    Matrixr        _cameraFullProjection;
-    Matrixr        _cameraProjection;
-    Matrixr        _cameraProjectionTrans;
-    Matrixr        _cameraViewing;
-    Matrixr        _cameraToWorld;
-    Matrixr        _cameraDecoration;
+    Matrix         _cameraProjection;
+    Matrix         _cameraProjectionTrans;
+    Matrix         _cameraViewing;
+    Matrix         _cameraToWorld;
+    Matrix         _cameraDecoration;
 
-    Matrixr        _objectToWorld;
-    Matrixr        _worldToScreen;
+    Matrix         _objectToWorld;
+    Matrix         _worldToScreen;
 
-    Matrixr        _vpCameraFullProjection;
-    Matrixr        _vpCameraProjection;
-    Matrixr        _vpCameraProjectionTrans;
-    Matrixr        _vpCameraViewing;
-    Matrixr        _vpCameraToWorld;
-    Matrixr        _vpWorldToScreen;
+    Matrix         _vpCameraFullProjection;
+    Matrix         _vpCameraProjection;
+    Matrix         _vpCameraProjectionTrans;
+    Matrix         _vpCameraViewing;
+    Matrix         _vpCameraToWorld;
+    Matrix         _vpWorldToScreen;
 
-    Real           _cameraNear;
-    Real           _cameraFar;
+    Real32         _cameraNear;
+    Real32         _cameraFar;
 
     Int32          _iPixelLeft;
     Int32          _iPixelRight;
@@ -289,9 +382,13 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
 
     bool           _bFull;
 
+    Int32          _iDrawerId;
+    Int32          _iDrawableId;
+
     UInt32         _uiLightState;
 
     Window        *_pWindow;
+    Node          *_pSGNode;
 
     State         *_pActiveState;
     StateOverride *_pActiveStateOverride;
@@ -303,6 +400,7 @@ class OSG_SYSTEM_DLLMAPPING DrawEnv
 
     GLenum         _aActiveTexTargets[osgMaxTexImages];
     UInt32         _uiActiveShader;
+    UInt32         _uiRequiredOGLFeature;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

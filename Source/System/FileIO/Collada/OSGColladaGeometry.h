@@ -41,11 +41,12 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaInstantiableElement.h"
 #include "OSGColladaElementFactoryHelper.h"
 #include "OSGColladaInstanceMaterial.h"
+#include "OSGColladaInstInfo.h"
 #include "OSGColladaSource.h"
 #include "OSGNode.h"
 #include "OSGGeometry.h"
@@ -55,6 +56,7 @@
 #include <dae/daeDomTypes.h>
 #include <dom/domInputLocal.h>
 #include <dom/domInputLocalOffset.h>
+#include <dom/domSource.h>
 
 // forward decls
 class domMesh;
@@ -73,6 +75,11 @@ OSG_BEGIN_NAMESPACE
 class ColladaInstanceGeometry;
 OSG_GEN_MEMOBJPTR(ColladaInstanceGeometry);
 
+class ColladaNode;
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
 {
@@ -93,6 +100,64 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
     typedef ColladaInstanceMaterial::BindVertexInfo  BindVertexInfo;
     typedef ColladaInstanceMaterial::BindVertexStore BindVertexStore;
 
+    class ColladaGeometryInstInfo : public ColladaInstInfo
+    {
+        /*==========================  PUBLIC  =============================*/
+      public:
+        /*-----------------------------------------------------------------*/
+        /*! \name Types                                                    */
+        /*! \{                                                             */
+
+        typedef ColladaInstInfo          Inherited;
+        typedef ColladaGeometryInstInfo  Self;
+
+        OSG_GEN_INTERNAL_MEMOBJPTR(ColladaGeometryInstInfo);
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+        /*! \name Create                                                   */
+        /*! \{                                                             */
+
+        static  ColladaInstInfoTransitPtr
+            create(ColladaNode             *colInstParent,
+                   ColladaInstanceGeometry *colInst,
+                   Node                    *parentN       );
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+        /*! \name Access                                                   */
+        /*! \{                                                             */
+
+        inline Node *getParentNode(void) const;
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+        /*! \name Process                                                  */
+        /*! \{                                                             */
+
+        virtual void process(void);
+
+        /*! \}                                                             */
+        /*=========================  PROTECTED  ===========================*/
+      protected:
+        /*-----------------------------------------------------------------*/
+        /*! \name Constructors/Destructor                                  */
+        /*! \{                                                             */
+
+                 ColladaGeometryInstInfo(
+                     ColladaNode             *colInstParent,
+                     ColladaInstanceGeometry *colInst,
+                     Node                    *parentN       );
+        virtual ~ColladaGeometryInstInfo(void               );
+
+        /*! \}                                                             */
+        /*-----------------------------------------------------------------*/
+
+        NodeUnrecPtr _parentN;
+    };
+
+    OSG_GEN_MEMOBJPTR(ColladaGeometryInstInfo);
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
     /*! \name Create                                                       */
@@ -106,8 +171,8 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void  read          (void                            );
-    virtual Node *createInstance(ColladaInstanceElement *instElem);
+    virtual void  read          (ColladaElement  *colElemParent);
+    virtual Node *createInstance(ColladaInstInfo *colInstInfo  );
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
@@ -129,8 +194,13 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
     typedef SourceMap::iterator                        SourceMapIt;
     typedef SourceMap::const_iterator                  SourceMapConstIt;
 
+    /*! \nohierarchy
+     */
     struct PropInfo
     {
+        PropInfo(void                  );
+        PropInfo(const PropInfo &source);
+
         std::string               _semantic;
         Int32                     _set;
 
@@ -150,7 +220,9 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
     typedef std::map<std::string, UInt32>            InstanceMap;
     typedef InstanceMap::iterator                    InstanceMapIt;
     typedef InstanceMap::const_iterator              InstanceMapConstIt;
-        
+
+    /*! \nohierarchy
+     */
     struct GeoInfo
     {
         std::string                 _matSymbol;
@@ -173,8 +245,8 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
     /*! \name Helper Functions                                             */
     /*! \{                                                                 */
 
-    void readMesh     (domMesh *mesh);
-    void readSources  (domMesh *mesh);
+    void readMesh   (      domMesh         *mesh   );
+    void readSources(const domSource_Array &sources);
 
     void readLines     (domMesh *mesh, domLines      *lines     );
     void readLineStrips(domMesh *mesh, domLinestrips *lineStrips);
@@ -212,6 +284,8 @@ class OSG_FILEIO_DLLMAPPING ColladaGeometry : public ColladaInstantiableElement
                                          UInt32                 inSet,
                                          UInt32                &offset     );
 
+    UInt16 findFreePropertyIndex(UInt32 geoIdx);
+
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
 
@@ -226,7 +300,7 @@ OSG_GEN_MEMOBJPTR(ColladaGeometry);
 
 OSG_END_NAMESPACE
 
-// #include "OSGColladaGeometry.inl"
+#include "OSGColladaGeometry.inl"
 
 #endif // OSG_WITH_COLLADA
 

@@ -41,7 +41,7 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaInstanceElement.h"
 #include "OSGColladaGeometry.h"
@@ -51,6 +51,10 @@
 #include <dom/domGeometry.h>
 
 OSG_BEGIN_NAMESPACE
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaInstanceGeometry
     : public ColladaInstanceElement
@@ -85,8 +89,7 @@ class OSG_FILEIO_DLLMAPPING ColladaInstanceGeometry
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void  read   (void                  );
-    virtual Node *process(ColladaElement *parent);
+    virtual void read(ColladaElement *colElemParent);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -107,6 +110,13 @@ class OSG_FILEIO_DLLMAPPING ColladaInstanceGeometry
     
              ColladaInstanceGeometry(daeElement *elem, ColladaGlobal *global);
     virtual ~ColladaInstanceGeometry(void                                   );
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name Helper functions                                             */
+    /*! \{                                                                 */
+
+    void readBindMaterial(domBind_material *bindMat);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

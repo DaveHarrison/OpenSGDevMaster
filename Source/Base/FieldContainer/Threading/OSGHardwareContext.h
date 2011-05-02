@@ -52,6 +52,11 @@ class BlockingTask;
 
 /*! \brief HardwareContext class. See \ref
            PageBaseHardwareContext for a description.
+
+    \ingroup GrpBaseHardwareContext
+    \ingroup GrpLibOSGBase
+    \includebasedoc
+
 */
 
 class OSG_BASE_DLLMAPPING HardwareContext : public HardwareContextBase
@@ -70,6 +75,11 @@ class OSG_BASE_DLLMAPPING HardwareContext : public HardwareContextBase
         OpenGLInitialized = 0x0001,
         CudaInitialized   = 0x0002,
         OpenCLInitialized = 0x0004
+    };
+
+    enum OpenGLFeatures
+    {
+        HasAttribAliasing = 0x0001
     };
 
     /*---------------------------------------------------------------------*/
@@ -104,6 +114,14 @@ class OSG_BASE_DLLMAPPING HardwareContext : public HardwareContextBase
     void setCudaInit(void);
 
     /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                      Init                                    */
+    /*! \{                                                                 */
+
+    UInt32 getOGLFeatures   (void) const;
+    bool   hasAttribAliasing(void) const; 
+
+    /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
 
   protected:
@@ -112,6 +130,7 @@ class OSG_BASE_DLLMAPPING HardwareContext : public HardwareContextBase
 
     HardwareContextThreadRefPtr _pContextThread;
     UInt32                      _uiInitState;
+    UInt32                      _uiOGLFeatures;
 
     /*---------------------------------------------------------------------*/
     /*! \name                  Constructors                                */
@@ -149,7 +168,7 @@ class OSG_BASE_DLLMAPPING HardwareContext : public HardwareContextBase
 
     void   setOpenGLInit(void);
 
-    UInt32 getInitState (void);
+    UInt32 getInitState (void) const;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

@@ -19,13 +19,15 @@ SET(${PROJECT_NAME}_DEP_TEST_OSG_LIB OSGGroup
 # SET(${PROJECT_NAME}_DEP_INCDIR)
 
 IF(FREETYPE_FOUND)
-    SET(${PROJECT_NAME}_DEP_INCDIR FREETYPE_INCLUDE_DIR_freetype2)
+    SET(${PROJECT_NAME}_DEP_INCDIR FREETYPE_INCLUDE_DIR_freetype2
+                                   FREETYPE_INCLUDE_DIR_ft2build
+                                   FONTCONFIG_INCLUDE_DIR)
     SET(${PROJECT_NAME}_DEP_LIB FREETYPE_LIBRARIES FONTCONFIG_LIBRARY)
 ENDIF(FREETYPE_FOUND)
 
-IF(APPLE)
+IF(OSG_APPLE32)
     SET(${PROJECT_NAME}_DEP_LIB OSG_APPLICATIONSERVICES_FRAMEWORK)
-ENDIF(APPLE)
+ENDIF(OSG_APPLE32)
 
 # SET(${PROJECT_NAME}_DEP_TEST_LIB)
 # SET(${PROJECT_NAME}_DEP_TEST_LIBDIR)
@@ -45,6 +47,12 @@ OSG_STORE_PROJECT_DEPENDENCIES()
 ##############################################################################
 
 OSG_ADD_DIRECTORY("Source/System/Text")
+
+##############################################################################
+# setup python bindings
+##############################################################################
+
+#SET(${PROJECT_NAME}_NO_PYTHON TRUE)
 
 ##############################################################################
 # setup build

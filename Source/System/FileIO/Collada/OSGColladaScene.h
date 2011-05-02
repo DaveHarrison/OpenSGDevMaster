@@ -47,7 +47,7 @@
  */
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaElement.h"
 #include "OSGColladaElementFactoryHelper.h"
@@ -58,6 +58,9 @@ OSG_BEGIN_NAMESPACE
 class ColladaInstanceVisualScene;
 OSG_GEN_MEMOBJPTR(ColladaInstanceVisualScene);
 
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaScene : public ColladaElement
 {
@@ -85,8 +88,7 @@ class OSG_FILEIO_DLLMAPPING ColladaScene : public ColladaElement
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void read   (void);
-    virtual void process(void);
+    virtual void read(ColladaElement *colElemParent);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
@@ -100,10 +102,7 @@ class OSG_FILEIO_DLLMAPPING ColladaScene : public ColladaElement
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
-
     static ColladaElementRegistrationHelper _regHelper;
-
-    ColladaInstanceVisualSceneRefPtr        _colInstVisScene;
 };
 
 OSG_GEN_MEMOBJPTR(ColladaScene);
@@ -111,7 +110,6 @@ OSG_GEN_MEMOBJPTR(ColladaScene);
 OSG_END_NAMESPACE
 
 // #include "OSGColladaScene.inl"
-#include "OSGColladaInstanceVisualScene.h"
 
 #endif // OSG_WITH_COLLADA
 

@@ -70,6 +70,8 @@ class Node;
 //---------------------------------------------------------------------------
 
 /*! \brief IntersectAction class
+    \ingroup GrpSystemIntersectAction
+    \ingroup GrpLibOSGSystem
  */
 
 class OSG_SYSTEM_DLLMAPPING IntersectAction : public Action
@@ -131,7 +133,7 @@ class OSG_SYSTEM_DLLMAPPING IntersectAction : public Action
     
           Pnt3f    getHitPoint   (      void                 ) const;
     
-          Vec3f    getHitNormal  (      void                 ) const;
+    const Vec3f   &getHitNormal  (      void                 ) const;
     
           Node    *getHitObject  (      void                 ) const;
     
@@ -143,13 +145,13 @@ class OSG_SYSTEM_DLLMAPPING IntersectAction : public Action
 
     // to be used by the traversed nodes
     // set (temporary) results
-    Action::ResultE setEnterLeave(Real32   enter, 
-                                  Real32   leave   );
-    void            setHit       (Real32   t, 
-                                  Node    *obj, 
-                                  Int32    triIndex, 
-                                  Vec3f   &normal,
-                                  Int32    lineIndex );
+    Action::ResultE setEnterLeave(      Real32   enter, 
+                                        Real32   leave   );
+    void            setHit       (      Real32   t, 
+                                        Node    *obj, 
+                                        Int32    triIndex, 
+                                  const Vec3f   &normal,
+                                        Int32    lineIndex );
 
     // when entering/leaving a different coordinate system, the values might
     // have to be scaled
@@ -212,6 +214,8 @@ class OSG_SYSTEM_DLLMAPPING IntersectAction : public Action
 
     virtual FunctorStore *getDefaultEnterFunctors(void);
     virtual FunctorStore *getDefaultLeaveFunctors(void);
+
+    ResultE onEnterNode(Node* node, Action* action);
 
   private:
 

@@ -68,6 +68,8 @@
 #include <link.h>
 #endif
 
+#include <boost/algorithm/string.hpp>    
+
 #include "OSGBaseFunctions.h"
 
 #include "OSGViewport.h"
@@ -100,90 +102,6 @@ OSG_BEGIN_NAMESPACE
 // OSGWindowBase.cpp file.
 // To modify it, please change the .fcd file (OSGWindow.fcd) and
 // regenerate the base file.
-/*! \page PageSystemOGLObjects OpenGL Objects & Extension Handling
-
-\section PageSystemOGLObj OpenGL Objects
-
-OpenGL objects are an important way to manage data and speed up repetitive use.
-OpenGL objects in OpenSG include everything that can be stored inside
-OpenGL, most prominently display lists and texture objects.
-
-Handling OpenGL objects in a multi-window and possibly multi-pipe environment
-becomes an interesting problem. As the different windows may show different
-parts of a scene or different scenes alltogether the actually used and defined
-set of OpenGL objects should include only what's necessary to reduce the
-consumed ressources.
-
-To do that OpenGL objects are managed by the OpenSG Windows. Before they are
-used they have to be registered with the OSG::Window class. This is a static
-operation on the Window class, as it affects all exisiting Windows. Multiple
-objects can be registered in one call, and they will receive consecutive
-object ids. The ids are assigned by the object manager. It can not be queried
-from OpenGL, as the thread which creates the objects usually doesn't have a
-valid OpenGL context. As a consequence you should not use OpenGL-assigned ids,
-as they might interfere with OpenSGs handling of ids.
-
-Part of the registration is to provide an update OSG::Functor, which is called
-whenever the object needs to be updated. This functor gets passed the id and
-status of the object and has to execute the correct function. There are a
-number of stati that the functor has to handle.
-
-The first time it is called the status be OSG::Window::GLObjectE::initialize.
-The functor has to create the necessary OpenGL ressources and initialize the
-OpenGL object. For a texture object this is the definition of the image via
-glTexImage(). 
-
-When the object changes there are two cases to distinguish. In the simple case
-the object has changed significantly, needing a
-OSG::Window::GLObjectE::reinitialize. For textures this would be changing the
-filter or changing the image size. Both of these actions necessitate a
-recreation of the actual texture object. If only the data of the image changes
-this can be handledmore efficiently via glTexSubImage() calls, which is an
-example for a OSG::Window::GLObjectE::refresh. The OSG::Window is responsible
-for keeping track of the current of the objects, and thus it has to be
-notified whenever the state of the OpenSG object underlying an OpenGL has
-changed, necessitating either a refresh or a reinitialize. This can be done by
-calling the static OSG::Window::refreshGLObject or
-OSG::Window::reinitializeGLObject methods. The object will be flagged as
-changed in all Windows and at the next validate time it will be
-refreshed/recreated.
-
-Before an object can be used it has to be validated. This has to be done when
-the OpenGL context is valid and should usually be done just before the object
-is used. If the object is still valid, nothing happens. The
-OSG::Window::validateObject method is inline and thus the overhead of calling
-it before every use is minimal.
-
-When an object is not needed any more is needs to be destroyed. The
-destruction can be started via OSG::Window::destroyGLObject. It will actually
-be executed the next time a Window has finished rendering (i.e. its
-OSG::Window::frameExit() function is called). The object's functor will be
-called for the OSG::Window::GLObjectE::destroy state, and it should free
-context-specific resources. After this has happened for all Windows it will be
-called one final time with OSG::Window::GLObjectE::finaldestroy. Here
-context-independent resources can be freed.
-
-\section PageSystemOGLExt OpenGL Extensions
-
-The situation with OpenGL extensions is similar to the one with OpenGL objects:
-as the thread that initializes things probably has no OpenGL context, it cannot
-call the necessary OpenGL functions directly. Further complicating matters is
-the fact that in systems with multiple graohics cards they may not all be of
-the same type, and thus might support different extensions.
-
-To handle these situations the extensions themselves and the extension
-functions need to be registered and accessed using the OSG::Window. The
-registration (OSG::Window::registerExtension, OSG::Window::registerFunction)
-just needs the names and returns a handle that has to be be used to access the
-extensions/functions. This registration can be done from any thread.
-
-When using the extension/function it is necessary to check if it supported on
-the currently active OpenGL context. To speed this up the Window caches the
-test results and provides the OSG::Window::hasExtension method to check it.
-To access the functions OSG::Window::getFunction method can be used. It is not
-advisable to store the received extension functions, as there is no guarantee
-that the pointer will be the same for different contexts.
-*/
 
 // Window-sytem specific virtual functions
 
@@ -228,7 +146,6 @@ Int32               OSG::Window::_currentWindowId = 0;
 
 // GLobject handling
 
-#ifndef OSG_EMBEDDED
 /*! The lock used to mutex access of the GLObjects' reference count. One 
   should be enough for all of them, as they are pretty rarely changed, only 
   when they are used for the first time.
@@ -241,7 +158,6 @@ LockRefPtr                            OSG::Window::_GLObjectLock = NULL;
  */
 
 LockRefPtr                            OSG::Window::_staticWindowLock = NULL;
-#endif
 
 /*! Global list of all GL Objects used in the system. See \ref
   PageSystemOGLObjects for a description.
@@ -290,10 +206,8 @@ void OSG::Window::initMethod(InitPhase ePhase)
 
 bool OSG::Window::cleanup(void)
 {
-#ifndef OSG_EMBEDDED
     _staticWindowLock = NULL;
     _GLObjectLock     = NULL;
-#endif
 
     GLObject *pCurr = NULL;
 
@@ -408,9 +322,13 @@ void OSG::Window::onCreate(const Window *source)
         doResetGLObjectStatus(1, _glObjects.size() - 1);
     }
 
+    staticAcquire();
+
     _allWindows.push_back(this); 
 
     _windowId = _currentWindowId++;
+
+    staticRelease();
 
     _pContextThread = WindowDrawThread::get(NULL, false);
 }
@@ -462,6 +380,8 @@ void OSG::Window::onDestroy(UInt32 uiContainerId)
         }
     }
 
+    staticAcquire();
+
     WindowStore::iterator winIt;
 
     winIt = std::find(_allWindows.begin(), 
@@ -472,6 +392,8 @@ void OSG::Window::onDestroy(UInt32 uiContainerId)
 
     if(winIt != _allWindows.end()) 
         _allWindows.erase(winIt);
+
+    staticRelease();
 
     Inherited::onDestroy(uiContainerId);
 }
@@ -539,7 +461,6 @@ void OSG::Window::staticAcquire(void)
     if(GlobalSystemState != Running)
         return;
         
-#ifndef OSG_EMBEDDED
     if(_staticWindowLock == NULL)
     {
         _staticWindowLock =
@@ -549,7 +470,6 @@ void OSG::Window::staticAcquire(void)
         addPostFactoryExitFunction(&Window::cleanup);
     }
     _staticWindowLock->acquire();
-#endif
 }
 
 void OSG::Window::staticRelease(void)
@@ -558,9 +478,7 @@ void OSG::Window::staticRelease(void)
     if(GlobalSystemState != Running)
         return;
         
-#ifndef OSG_EMBEDDED
     _staticWindowLock->release();
-#endif
 }
 
 /*-------------------------------------------------------------------------*\
@@ -722,20 +640,22 @@ UInt32 OSG::Window::validateGLObject(UInt32   osgId,
 
     if(osgId >= _lastValidate.size()) // can happen if multi-threading
     {
-/*
-        _lastValidate.insert(_lastValidate.end(), 
-                             osgId + 1 - _lastValidate.size(),
-                             0);
- */
         _lastValidate.resize(osgId + 1, 0);
     }
     
     if(osgId >= _mfGlObjectLastReinitialize.size())
     {
-        editMField( GlObjectLastReinitializeFieldId, 
-                   _mfGlObjectLastReinitialize     );
+        editMField( GlObjectLastReinitializeFieldId,
+                   _mfGlObjectLastReinitialize      );
 
         _mfGlObjectLastReinitialize.resize(osgId + 1, 0);
+    }
+
+    if(osgId >= _mfGlObjectLastRefresh.size())
+    {
+        editMField(GlObjectLastRefreshFieldId, _mfGlObjectLastRefresh);
+
+        _mfGlObjectLastRefresh.resize(osgId + 1, 0);
     }
 
     FDEBUG(("Window 0x%p (event %d,ri:%d,rf:%d): "
@@ -1047,6 +967,8 @@ void OSG::Window::destroyGLObject(UInt32 osgId, UInt32 num)
         return;
     }
 
+    staticAcquire();
+
     WindowStore::const_iterator winIt  = _allWindows.begin();
     WindowStore::const_iterator winEnd = _allWindows.end  ();
 
@@ -1076,6 +998,8 @@ void OSG::Window::destroyGLObject(UInt32 osgId, UInt32 num)
         if(pWin->getGlObjectLastReinitialize(osgId) != 0) 
             pWin->_glObjectDestroyList.push_back(DestroyEntry(osgId, num));
     }
+
+    staticRelease();
 }
 
 
@@ -1375,12 +1299,10 @@ void OSG::Window::doFrameInit(bool reinitExtFuctions)
     {
         ignoreEnvDone = true;
 
-#ifndef OSG_EMBEDDED
         Char8 *p = getenv("OSG_IGNORE_EXTENSIONS");
         
         if(p)
             ignoreExtensions(p);
-#endif
     }
     
     // get version/extensions and split them
@@ -1557,7 +1479,6 @@ void OSG::Window::doFrameInit(bool reinitExtFuctions)
         _extFunctions.push_back(func);
     }
 
-#ifndef OSG_EMBEDDED
     // any new constants registered ? 
     while(_registeredConstants.size() > _availConstants.size())
     {
@@ -1579,7 +1500,6 @@ void OSG::Window::doFrameInit(bool reinitExtFuctions)
 
         glGetError();
     }
-#endif
 
     _pTravValidator->incEventCounter();
 }
@@ -1680,15 +1600,10 @@ void OSG::Window::doFrameExit(void)
         
         while((glerr = glGetError()) != GL_NO_ERROR)
         {
-#ifndef OSG_EMBEDDED
             FWARNING(("Window::frameExit: Caught stray OpenGL "
                       "error %s (%#x).\n",
                       gluErrorString(glerr),
                       glerr));
-#else
-            FWARNING(("Window::frameExit: Caught stray OpenGL error %#x.\n",
-                      glerr));
-#endif
 
 #ifndef OSG_DEBUG
             FWARNING(("Rerun with debug-libraries to get more accurate "
@@ -1954,10 +1869,10 @@ void OSG::Window::setupGL( void )
     glEnable   (GL_NORMALIZE );
     
     // switch off default light
-    Real nul[4]={0.f,0.f,0.f,0.f};
+    Real32 nul[4]={0.f,0.f,0.f,0.f};
 
-    GLP::glLightfv(GL_LIGHT0, GL_DIFFUSE,  nul);
-    GLP::glLightfv(GL_LIGHT0, GL_SPECULAR, nul);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  nul);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, nul);
     
     _sfRendererInfo.getValue().assign(
         reinterpret_cast<const char *>(glGetString(GL_VERSION)));
@@ -1967,6 +1882,19 @@ void OSG::Window::setupGL( void )
     _sfRendererInfo.getValue() += 
         reinterpret_cast<const char *>(glGetString(GL_RENDERER));
 
+#ifndef __APPLE__
+    std::string szVendor = 
+        reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+
+    boost::to_lower(szVendor);
+
+    std::string::size_type rc = szVendor.find("nvidia", 0);
+
+    if(rc != std::string::npos)
+    {
+        _uiOGLFeatures |= HasAttribAliasing;
+    }
+#endif
 
     doFrameInit();    // call it to setup extensions
 }

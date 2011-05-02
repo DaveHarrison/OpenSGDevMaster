@@ -53,8 +53,11 @@ class Viewport;
 class DrawEnv;
 
 /*! \brief Background clearing with a color gradient. See \ref 
-    PageSystemWindowBackground for a description.
-*/
+           PageSystemWindowBackground for a description.
+    \ingroup GrpWindowBackgroundObj
+    \ingroup GrpLibOSGWindow
+    \includebasedoc
+ */
 
 class OSG_WINDOW_DLLMAPPING GradientBackground :
     public GradientBackgroundBase
@@ -87,6 +90,12 @@ class OSG_WINDOW_DLLMAPPING GradientBackground :
 
     void addLine   (Color3f color, Real32 position);
     void clearLines(void);
+
+    const MFColor3f *getMFColor   (      void        ) const;
+    const Color3f   &getColor     (const UInt32 index) const;
+
+    const MFReal32  *getMFPosition(      void        ) const;
+    const Real32    &getPosition  (const UInt32 index) const;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/

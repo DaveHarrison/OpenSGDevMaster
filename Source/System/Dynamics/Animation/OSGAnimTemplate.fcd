@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<FieldContainer
+   name="AnimTemplate"
+   parent="AttachmentContainer"
+   library="Dynamics"
+   pointerfieldtypes="both"
+   structure="abstract"
+   systemcomponent="true"
+   parentsystemcomponent="true"
+   decoratable="false"
+   useLocalIncludes="false"
+   isNodeCore="false"
+   isBundle="false"
+   parentFields="none"
+   >
+  <Field
+     name="name"
+     category="data"
+     type="std::string"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     fieldFlags="FClusterLocal"
+     >
+  </Field>
+  <Field
+     name="sources"
+     category="pointer"
+     type="AnimDataSource"
+     cardinality="multi"
+     visibility="external"
+     access="public"
+     fieldFlags="FStdAccess, FClusterLocal"
+     >
+    </Field>
+  <Field
+     name="targetIds"
+     category="data"
+     type="std::string"
+     cardinality="multi"
+     visibility="external"
+     access="public"
+     fieldFlags="FClusterLocal"
+     >
+  </Field>
+</FieldContainer>

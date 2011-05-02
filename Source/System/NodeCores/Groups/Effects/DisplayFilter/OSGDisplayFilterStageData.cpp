@@ -86,6 +86,7 @@ DisplayFilterStageData::DisplayFilterStageData(void) :
      Inherited        (    ),
     _pColFilter       (NULL),
     _pDistFilter      (NULL),
+    _pCalibFilter     (NULL),
     _pInitColTableFrom(NULL)
 {
 }
@@ -96,6 +97,7 @@ DisplayFilterStageData::DisplayFilterStageData(
      Inherited        (source),
     _pColFilter       (NULL  ),
     _pDistFilter      (NULL  ),
+    _pCalibFilter     (NULL  ),
     _pInitColTableFrom(NULL  )
 {
 }

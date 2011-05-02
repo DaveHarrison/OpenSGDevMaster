@@ -44,7 +44,7 @@
 
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGFileIODef.h"
 #include "OSGMemoryObject.h"
@@ -62,6 +62,9 @@ OSG_BEGIN_NAMESPACE
 class ColladaGlobal;
 OSG_GEN_MEMOBJPTR(ColladaGlobal);
 
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaElement : public MemoryObject
 {
@@ -81,7 +84,7 @@ class OSG_FILEIO_DLLMAPPING ColladaElement : public MemoryObject
     /*! \name Reading                                                      */
     /*! \{                                                                 */
 
-    virtual void read(void) = 0;
+    virtual void read(ColladaElement *colElemParent) = 0;
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -113,6 +116,7 @@ class OSG_FILEIO_DLLMAPPING ColladaElement : public MemoryObject
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
 
+    UInt32              _readState;
     daeElementRef       _elem;
     ColladaGlobalRefPtr _global;
 };

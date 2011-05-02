@@ -65,10 +65,14 @@
 #    define OSG_PNG_ARG(ARG) ARG
 #endif
 
-OSG_USING_NAMESPACE
+static const OSG::Char8 *suffixArray[] =
+{
+    "png"
+};
 
-/*! \class OSG::PNGImageFileType 
-    \ingroup GrpSystemImage
+OSG_BEGIN_NAMESPACE
+
+/*! \class PNGImageFileType 
 
   Image File Type to read/write and store/restore Image objects as
   PNG data.
@@ -81,12 +85,6 @@ OSG_USING_NAMESPACE
   the singleton object.
   
 */
-
-static const Char8 *suffixArray[] =
-{
-    "png"
-};
-
 
 #ifdef OSG_WITH_PNG
 
@@ -127,7 +125,7 @@ static void errorOutput (png_structp png_ptr, const char *message)
 {
     FFATAL   (("PNG: %s\n", message ));
     
-    longjmp(png_jmpbuf(png_ptr), 1); 
+    longjmp(png_jmpbuf(png_ptr), 1);
 }
 
 static void warningOutput (png_structp OSG_CHECK_ARG(png_ptr), 
@@ -177,7 +175,7 @@ bool PNGImageFileType::read(      Image        *OSG_PNG_ARG(pImage  ),
         return false;
     }
 
-    if(setjmp(png_jmpbuf(png_ptr))) 
+    if(setjmp(png_jmpbuf(png_ptr)))
     {
         png_destroy_read_struct(&png_ptr, &info_ptr, 0);
         return false;
@@ -657,7 +655,7 @@ UInt64 PNGImageFileType::restoreData(      Image  *OSG_PNG_ARG  (pImage ),
         return 0;
     }
 
-    if(setjmp(png_ptr->jmpbuf))
+    if(setjmp(png_jmpbuf(png_ptr)))
     {
         png_destroy_read_struct(&png_ptr, &info_ptr, 0);
         return 0;
@@ -1001,3 +999,6 @@ PNGImageFileType::PNGImageFileType(const Char8  *mimeType,
 PNGImageFileType::~PNGImageFileType(void)
 {
 }
+
+OSG_END_NAMESPACE
+

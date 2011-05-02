@@ -48,13 +48,16 @@
 
 OSG_BEGIN_NAMESPACE
 
-//! \ingroup GrpSystemRenderingBackend
-//! GraphOp class
+/*! \ingroup GrpUtilGraphOp
+    \ingroup GrpLibOSGUtil
+ */
 
 class OSG_UTIL_DLLMAPPING VerifyGeoGraphOp : public SingleTypeGraphOp<Geometry>
 {
     /*==========================  PUBLIC  =================================*/
+
   public:
+
     /*---------------------------------------------------------------------*/
     /*! \name Types                                                        */
     /*! \{                                                                 */
@@ -76,9 +79,8 @@ class OSG_UTIL_DLLMAPPING VerifyGeoGraphOp : public SingleTypeGraphOp<Geometry>
     /*! \name                   Constructors                               */
     /*! \{                                                                 */
     
-    static  ObjTransitPtr     create(bool repair = true);
-
-    virtual GraphOpTransitPtr clone (void              );
+    static  ObjTransitPtr     create(void);
+    virtual GraphOpTransitPtr clone (void);
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -88,12 +90,12 @@ class OSG_UTIL_DLLMAPPING VerifyGeoGraphOp : public SingleTypeGraphOp<Geometry>
     virtual bool traverse(Node *root);
     
     void setParams(const std::string params);
-    void setRepair(bool repair);
 
     std::string usage(void);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
+
   protected:
 
     bool travNodeEnter(Node *node);
@@ -103,19 +105,18 @@ class OSG_UTIL_DLLMAPPING VerifyGeoGraphOp : public SingleTypeGraphOp<Geometry>
     /*! \name Constructors/Destructor                                      */
     /*! \{                                                                 */
 
-             VerifyGeoGraphOp(      bool  repair = true,
-                              const char *name   = "VerifyGeo");
+             VerifyGeoGraphOp(const char *name   = "VerifyGeo");
     virtual ~VerifyGeoGraphOp(void                            );
 
     /*! \}                                                                 */
     /*==========================  PRIVATE  ================================*/
+
  private:
 
     bool checkIndexedGeo   (Geometry *geo, UInt32 sumLengths);
     bool checkNonindexedGeo(Geometry *geo, UInt32 sumLengths);
     
     UInt32 _errorCount;
-    bool   _repair;
 };
 
 OSG_GEN_MEMOBJPTR(VerifyGeoGraphOp);

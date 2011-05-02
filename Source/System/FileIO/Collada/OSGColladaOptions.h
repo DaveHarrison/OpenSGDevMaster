@@ -48,7 +48,7 @@
  */
 #include "OSGConfig.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGFileIODef.h"
 #include "OSGMemoryObject.h"
@@ -57,6 +57,10 @@
 #include "OSGIOFileTypeBase.h"
 
 OSG_BEGIN_NAMESPACE
+
+/*! \ingroup GrpFileIOCollada
+    \nohierarchy
+ */
 
 class OSG_FILEIO_DLLMAPPING ColladaOptions : public MemoryObject
 {
@@ -95,8 +99,17 @@ class OSG_FILEIO_DLLMAPPING ColladaOptions : public MemoryObject
     bool getInvertTransparency   (void      ) const;
     void setInvertTransparency   (bool value);
 
+    bool getMergeTransforms      (void      ) const;
+    void setMergeTransforms      (bool value);
+
     bool getCreateNameAttachments(void      ) const;
     void setCreateNameAttachments(bool value);
+
+    bool getLoadAnimations       (void      ) const;
+    void setLoadAnimations       (bool value);   
+
+    bool getLoadLights           (void      ) const;
+    void setLoadLights           (bool value);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/
@@ -112,7 +125,10 @@ class OSG_FILEIO_DLLMAPPING ColladaOptions : public MemoryObject
     /*---------------------------------------------------------------------*/
 
     bool _invertTransparency;
+    bool _mergeTransforms;
     bool _createNameAttachments;
+    bool _loadAnimations;
+    bool _loadLights;
 };
 
 OSG_GEN_MEMOBJPTR(ColladaOptions);

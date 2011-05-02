@@ -12,6 +12,9 @@
 // the general scene file loading handler
 #include "OSGSceneFileHandler.h"
 #include "OSGFieldContainerFactory.h"
+
+#define BOOST_FILESYSTEM_VERSION 2
+
 #include <boost/bind.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -29,29 +32,6 @@ unsigned gNextModelIdx = 0;
 
 // forward declaration so we can have the interesting stuff upfront
 int setupGLUT( int *argc, char *argv[] );
-
-
-OSG::UInt64 getNumAllocatedFieldContainers()
-{
-   OSG::UInt64 num_allocated_fcs(0);
-
-
-   for(OSG::UInt64 i=0; 
-                   i<OSG::FieldContainerFactory::the()->getNumContainers(); 
-                   i++)
-   {
-       OSG::FieldContainer *fcp = 
-           OSG::FieldContainerFactory::the()->getContainer(i);
-
-      if (fcp != NULL)
-      {
-         num_allocated_fcs += 1;
-      }
-   }
-
-   return num_allocated_fcs;
-}
-
 
 void findModels(std::string dirname)
 {

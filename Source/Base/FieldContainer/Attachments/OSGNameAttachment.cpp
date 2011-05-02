@@ -36,12 +36,6 @@
  *                                                                           *
 \*---------------------------------------------------------------------------*/
 
-#ifdef OSG_DOC_FILES_IN_MODULE
-/*! \file OSGSimpleAttachments.cpp
-    \ingroup GrpSystemFieldContainer
- */
-#endif
-
 #include <cstdlib>
 #include <cstdio>
 
@@ -114,7 +108,7 @@ void setName(AttachmentContainer * const  pContainer,
 {
     if(pContainer == NULL)
     {
-        FFATAL(("setName: no container?!?"));
+        FFATAL(("setName: no container?!?\n"));
         return;
     }
    
@@ -137,7 +131,7 @@ void setName(AttachmentContainer * const  pContainer,
 
         if(name == NULL)
         {
-            FFATAL(("setName: Name Attachment is not castable to Name?!?"));
+            FFATAL(("setName: Name Attachment is not castable to Name?!?\n"));
             return;
         }
     }

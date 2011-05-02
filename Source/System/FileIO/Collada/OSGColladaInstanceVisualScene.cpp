@@ -42,7 +42,7 @@
 
 #include "OSGColladaInstanceVisualScene.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 #include "OSGColladaVisualScene.h"
@@ -65,7 +65,7 @@ ColladaInstanceVisualScene::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaInstanceVisualScene::read(void)
+ColladaInstanceVisualScene::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaInstanceVisualScene::read\n"));
 
@@ -77,18 +77,8 @@ ColladaInstanceVisualScene::read(void)
             ColladaElementFactory::the()->create(
                 getTargetDOMElem(), getGlobal()));
 
-        colVisScene->read();
+        colVisScene->read(this);
     }
-}
-
-FieldContainer *
-ColladaInstanceVisualScene::process(ColladaElement *parent)
-{
-    ColladaVisualSceneRefPtr colVisScene = getTargetElem();
-
-    getGlobal()->setRoot(colVisScene->createInstance(this));
-
-    return NULL;
 }
 
 ColladaVisualScene *

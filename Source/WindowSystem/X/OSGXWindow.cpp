@@ -273,6 +273,26 @@ void XWindow::doActivate(void)
 {
     Bool res;
 
+#ifdef OSG_DEBUG
+    if(getDisplay() == NULL)
+    {
+        SWARNING << "XWindow::doActivate: Display is NULL, can not activate context."
+                 << std::endl;
+    }
+
+    if(getWindow() == 0)
+    {
+        SWARNING << "XWindow::doActivate: Window is NULL, can not activate context."
+                 << std::endl;
+    }
+
+    if(getContext() == NULL)
+    {
+        SWARNING << "XWindow::doActivate: Context is NULL, can not activate context."
+                 << std::endl;
+    }
+#endif
+
     res = glXMakeCurrent(getDisplay(), getWindow(), getContext());
     
     if(res != True)
@@ -320,16 +340,11 @@ void XWindow::onDestroy(UInt32 uiContainerId)
 
 OSG_BEGIN_NAMESPACE
 
-// doxygen can't find these
-#ifndef OSG_DO_DOC 
-
 DataType FieldTraits<DisplayP,   2>::_type("DisplayP",   NULL);
 #if ( !defined(__GNUC__) || !defined(__linux) || ( !defined(__ia64) && !defined(__x86_64) && !defined(_ARCH_PPC64)) ) && (!defined(_MIPS_SZPTR) || _MIPS_SZPTR != 64)
 DataType FieldTraits<X11Window,  2>::_type("X11Window",  NULL);
 #endif
 DataType FieldTraits<GLXContext, 2>::_type("GLXContext", NULL);
-
-#endif
 
 OSG_FIELD_DLLEXPORT_DEF2(SField, DisplayP,   2);
 OSG_FIELD_DLLEXPORT_DEF2(MField, DisplayP,   2);

@@ -74,6 +74,22 @@ OSG::UInt16 DisplayFilterStageBase::getClassGroupId(void)
 /*------------------------------ get -----------------------------------*/
 
 
+//! Get the value of the DisplayFilterStage::_sfCalibrationPatternFilter field.
+inline
+CalibrationPatternFilter * DisplayFilterStageBase::getCalibrationPatternFilter(void) const
+{
+    return _sfCalibrationPatternFilter.getValue();
+}
+
+//! Set the value of the DisplayFilterStage::_sfCalibrationPatternFilter field.
+inline
+void DisplayFilterStageBase::setCalibrationPatternFilter(CalibrationPatternFilter * const value)
+{
+    editSField(CalibrationPatternFilterFieldMask);
+
+    _sfCalibrationPatternFilter.setValue(value);
+}
+
 //! Get the value of the DisplayFilterStage::_sfResolutionFilter field.
 inline
 ResolutionDisplayFilter * DisplayFilterStageBase::getResolutionFilter(void) const
@@ -121,6 +137,31 @@ void DisplayFilterStageBase::setDistortionFilter(DistortionDisplayFilter * const
 
     _sfDistortionFilter.setValue(value);
 }
+//! Get the value of the DisplayFilterStage::_sfActiveGroup field.
+
+inline
+Int32 &DisplayFilterStageBase::editActiveGroup(void)
+{
+    editSField(ActiveGroupFieldMask);
+
+    return _sfActiveGroup.getValue();
+}
+
+//! Get the value of the DisplayFilterStage::_sfActiveGroup field.
+inline
+      Int32  DisplayFilterStageBase::getActiveGroup(void) const
+{
+    return _sfActiveGroup.getValue();
+}
+
+//! Set the value of the DisplayFilterStage::_sfActiveGroup field.
+inline
+void DisplayFilterStageBase::setActiveGroup(const Int32 value)
+{
+    editSField(ActiveGroupFieldMask);
+
+    _sfActiveGroup.setValue(value);
+}
 
 //! Get the value of the \a index element the DisplayFilterStage::_mfFilterGroups field.
 inline
@@ -140,6 +181,9 @@ void DisplayFilterStageBase::execSync (      DisplayFilterStageBase *pFrom,
 {
     Inherited::execSync(pFrom, whichField, oOffsets, syncMode, uiSyncInfo);
 
+    if(FieldBits::NoField != (CalibrationPatternFilterFieldMask & whichField))
+        _sfCalibrationPatternFilter.syncWith(pFrom->_sfCalibrationPatternFilter);
+
     if(FieldBits::NoField != (ResolutionFilterFieldMask & whichField))
         _sfResolutionFilter.syncWith(pFrom->_sfResolutionFilter);
 
@@ -154,6 +198,9 @@ void DisplayFilterStageBase::execSync (      DisplayFilterStageBase *pFrom,
                                 syncMode,
                                 uiSyncInfo,
                                 oOffsets);
+
+    if(FieldBits::NoField != (ActiveGroupFieldMask & whichField))
+        _sfActiveGroup.syncWith(pFrom->_sfActiveGroup);
 }
 #endif
 

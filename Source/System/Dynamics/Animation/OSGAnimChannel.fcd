@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<FieldContainer
+    name="AnimChannel"
+    parent="NodeCore"
+    library="Dynamics"
+    pointerfieldtypes="both"
+    structure="abstract"
+    systemcomponent="true"
+    parentsystemcomponent="true"
+    decoratable="false"
+    useLocalIncludes="false"
+    isNodeCore="true"
+    isBundle="false"
+    childFields="both"
+    parentFields="none"
+>
+  Base for animation data sinks.
+ 
+  <Field
+     name="animation"
+     category="parentpointer"
+     type="Animation"
+     cardinality="single"
+     visibility="external"
+     access="none"
+     fieldFlags="FClusterLocal"
+     >
+  </Field>
+  <Field
+     name="weight"
+     category="data"
+     type="Real32"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="1.f"
+     fieldFlags="FClusterLocal"
+     >
+  </Field>
+  <Field
+     name="inValue"
+     category="data"
+     type="Real32"
+     cardinality="single"
+     visibility="external"
+     access="public"
+     defaultValue="0.0"
+     fieldFlags="FClusterLocal"
+     >
+  </Field>
+</FieldContainer>

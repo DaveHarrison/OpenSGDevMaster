@@ -48,7 +48,10 @@ OSG_BEGIN_NAMESPACE
 
 /*! \brief VRMLPositionInterpolator class. See \ref
            PageSystemDynamicsVRMLPositionInterpolator for a description.
-*/
+    \ingroup GrpDynamicsVRMLAnimationObj
+    \ingroup GrpLibOSGDynamics
+    \includebasedoc
+ */
 
 class OSG_DYNAMICS_DLLMAPPING VRMLPositionInterpolator : 
     public VRMLPositionInterpolatorBase
@@ -77,6 +80,13 @@ class OSG_DYNAMICS_DLLMAPPING VRMLPositionInterpolator :
 
     virtual void dump(      UInt32     uiIndent = 0,
                       const BitVector  bvFlags  = 0) const;
+
+    /*! \}                                                                 */
+    /*---------------------------------------------------------------------*/
+    /*! \name                   Evaluation                                 */
+    /*! \{                                                                 */
+
+    virtual void evaluate(void);
 
     /*! \}                                                                 */
     /*=========================  PROTECTED  ===============================*/

@@ -33,6 +33,8 @@ IF(WIN32)
   OSG_ADD_GLEWPACKAGE(FALSE)
 ENDIF(WIN32)
 
+SET(${PROJECT_NAME}_NO_DOC TRUE)
+
 OSG_STORE_PROJECT_DEPENDENCIES()
 
 ##############################################################################
@@ -42,6 +44,12 @@ OSG_STORE_PROJECT_DEPENDENCIES()
 SET(${PROJECT_NAME}_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 OSG_ADD_DIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}")
+
+##############################################################################
+# setup python bindings
+##############################################################################
+
+SET(${PROJECT_NAME}_NO_PYTHON TRUE)
 
 ##############################################################################
 # setup build

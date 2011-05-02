@@ -42,7 +42,7 @@
 
 #include "OSGColladaInstanceGeometry.h"
 
-#ifdef OSG_WITH_COLLADA
+#if defined(OSG_WITH_COLLADA) || defined(OSG_DO_DOC)
 
 #include "OSGColladaLog.h"
 
@@ -64,7 +64,7 @@ ColladaInstanceGeometry::create(daeElement *elem, ColladaGlobal *global)
 }
 
 void
-ColladaInstanceGeometry::read(void)
+ColladaInstanceGeometry::read(ColladaElement *colElemParent)
 {
     OSG_COLLADA_LOG(("ColladaInstanceGeometry::read\n"));
 
@@ -76,7 +76,7 @@ ColladaInstanceGeometry::read(void)
             ColladaElementFactory::the()->create(
                 getTargetDOMElem(), getGlobal()));
 
-        colGeo->read();
+        colGeo->read(this);
     }
 
     domInstance_geometryRef instGeo = getDOMElementAs<domInstance_geometry>();
@@ -84,56 +84,12 @@ ColladaInstanceGeometry::read(void)
 
     if(bindMat == NULL)
     {
-        SWARNING << "ColladaInstanceGeometry::read: No <bind_material> found."
-                 << std::endl;
+        SWARNING << "ColladaInstanceGeometry::read: "
+                 << "No <bind_material> found." << std::endl;
         return;
     }
 
-    domBind_material::domTechnique_commonRef  techCom      =
-        bindMat->getTechnique_common();
-    const domInstance_material_Array         &instMatArray =
-        techCom->getInstance_material_array();
-
-    for(UInt32 i = 0; i < instMatArray.getCount(); ++i)
-    {
-        ColladaInstanceMaterialRefPtr colInstMat =
-            getUserDataAs<ColladaInstanceMaterial>(instMatArray[i]);
-
-        if(colInstMat == NULL)
-        {
-            colInstMat = dynamic_pointer_cast<ColladaInstanceMaterial>(
-                ColladaElementFactory::the()->create(
-                    instMatArray[i], getGlobal()));
-
-            colInstMat->read();
-        }
-
-        _matMap[colInstMat->getSymbol()] = colInstMat;
-
-        OSG_COLLADA_LOG(("ColladaInstanceGeometry::read: binding symbol [%s] "
-                         "to target [%s]\n",
-                         colInstMat->getSymbol().c_str(),
-                         instMatArray[i]->getTarget().getURI()));
-    }
-
-    const domParam_Array &params = bindMat->getParam_array();
-
-    if(params.getCount() > 0)
-    {
-        SWARNING << "ColladaInstanceGeometry::read: Ignoring ["
-                 << params.getCount() << "] <param> elements."
-                 << std::endl;
-    }
-}
-
-Node *
-ColladaInstanceGeometry::process(ColladaElement *parent)
-{
-    OSG_COLLADA_LOG(("ColladaInstanceGeometry::process\n"));
-
-    ColladaGeometryRefPtr colGeo = getTargetElem();
-
-    return colGeo->createInstance(this);
+    readBindMaterial(bindMat);
 }
 
 ColladaGeometry *
@@ -180,6 +136,46 @@ ColladaInstanceGeometry::ColladaInstanceGeometry(
 
 ColladaInstanceGeometry::~ColladaInstanceGeometry(void)
 {
+}
+
+void
+ColladaInstanceGeometry::readBindMaterial(domBind_material *bindMat)
+{
+    domBind_material::domTechnique_commonRef  techCom      =
+        bindMat->getTechnique_common();
+    const domInstance_material_Array         &instMatArray =
+        techCom->getInstance_material_array();
+
+    for(UInt32 i = 0; i < instMatArray.getCount(); ++i)
+    {
+        ColladaInstanceMaterialRefPtr colInstMat =
+            getUserDataAs<ColladaInstanceMaterial>(instMatArray[i]);
+
+        if(colInstMat == NULL)
+        {
+            colInstMat = dynamic_pointer_cast<ColladaInstanceMaterial>(
+                ColladaElementFactory::the()->create(
+                    instMatArray[i], getGlobal()));
+
+            colInstMat->read(this);
+        }
+
+        _matMap[colInstMat->getSymbol()] = colInstMat;
+
+        OSG_COLLADA_LOG(("ColladaInstanceGeometry::readBindMaterial: "
+                         "binding symbol [%s] to target [%s]\n",
+                         colInstMat->getSymbol().c_str(),
+                         instMatArray[i]->getTarget().getURI()));
+    }
+
+    const domParam_Array &params = bindMat->getParam_array();
+
+    if(params.getCount() > 0)
+    {
+        SWARNING << "ColladaInstanceGeometry::readBindMaterial: "
+                 << "Ignoring [" << params.getCount()
+                 << "] <param> elements." << std::endl;
+    }
 }
 
 OSG_END_NAMESPACE

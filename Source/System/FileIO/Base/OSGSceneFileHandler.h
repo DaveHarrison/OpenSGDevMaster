@@ -59,8 +59,9 @@ OSG_BEGIN_NAMESPACE
 
 class GraphOpSeq;
 
-/*! \ingroup GrpSystemDrawablesGeometrymetryLoaderLib
- *  \brief Brief OSGSceneFileHandler
+/*! \brief Brief OSGSceneFileHandler
+    \ingroup GrpSystemFileIOBase
+    \ingroup GrpLibOSGSystem
  */
 
 class OSG_SYSTEM_DLLMAPPING SceneFileHandlerBase
@@ -139,7 +140,8 @@ class OSG_SYSTEM_DLLMAPPING SceneFileHandlerBase
     virtual NodeTransitPtr read(const  Char8       *fileName,
                                        GraphOpSeq  *graphOpSeq = 
                                                            _defaultgraphOpSeq,
-                                       Resolver     resolver   = NULL);
+                                       Resolver     resolver      = NULL,
+                                       bool         bWarnNotFound = true      );
 
     /*! \}                                                                 */
     /*---------------------------------------------------------------------*/
@@ -301,9 +303,13 @@ class OSG_SYSTEM_DLLMAPPING SceneFileHandlerBase
 
     std::string initPathHandler(const Char8        *fileName);
     
+    /*! \nohierarchy
+     */
+
     struct progressS
     {
-        UInt64 length;
+        ThreadRefPtr  thread;
+        UInt64        length;
         std::istream *is;
     };
 
@@ -338,13 +344,10 @@ class OSG_SYSTEM_DLLMAPPING SceneFileHandlerBase
     SceneFileHandlerBase(const SceneFileHandlerBase &source);
 };
 
-
-#if defined(WIN32)
-#    if !defined(OSG_COMPILE_SCENEFILEHANDLER)
-//OSG_SYSTEM_EXPIMP_TMPL 
-//template class OSG_SYSTEM_DLLMAPPING SingletonHolder<SceneFileHandlerBase>;
-#    endif
-#endif
+/*! \typedef OSG::SingletonHolder<OSG::SceneFileHandlerBase> SceneFileHandler;
+    \ingroup GrpSystemFileIOBase
+    \relatesalso OSG::SceneFileHandlerBase
+ */
 
 typedef SingletonHolder<SceneFileHandlerBase> SceneFileHandler;
 
